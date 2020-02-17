@@ -56,11 +56,11 @@ Explain what each test does and why
         a. title
         b. description
         c. selected location
-    7. Reminder data should be saved to local storage.
-    8. For each reminder, create a geofencing request in the background that fires up a notification when the user enters the geofencing area.
-    9. Provide testing for the ViewModels, Coroutines and LiveData objects.
-    10. Create a FakeDataSource to replace the Data Layer and test the app in isolation.
-    11. Use Espresso and Mockito to test each screen of the app:
+    6. Reminder data should be saved to local storage.
+    7. For each reminder, create a geofencing request in the background that fires up a notification when the user enters the geofencing area.
+    8. Provide testing for the ViewModels, Coroutines and LiveData objects.
+    9. Create a FakeDataSource to replace the Data Layer and test the app in isolation.
+    10. Use Espresso and Mockito to test each screen of the app:
         a. Test DAO (Data Access Object) and Repository classes.
         b. Add testing for the error messages.
         c. Add End-To-End testing for the Fragments navigation.
