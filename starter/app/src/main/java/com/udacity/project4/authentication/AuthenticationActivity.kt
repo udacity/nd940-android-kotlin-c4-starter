@@ -22,7 +22,6 @@ class AuthenticationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
-
         val auth = FirebaseAuth.getInstance()
 
 //          TODO: If the user was authenticated, send him to RemindersActivity
@@ -50,7 +49,7 @@ class AuthenticationActivity : AppCompatActivity() {
             AuthUI.IdpConfig.GoogleBuilder().build()
         )
 
-// Create and launch sign-in intent
+        // Create and launch sign-in intent
         startActivityForResult(
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
