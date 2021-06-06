@@ -9,14 +9,17 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
@@ -96,13 +99,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         Log.i("SelectLocationFragment", "onMapReady")
 
         map = googleMap
-
-        map.addMarker(
-            MarkerOptions()
-                .position(LatLng(0.0, 0.0))
-                .title("Marker")
-        )
-
         enableMyLocation()
         setPoiClick(map)
         setMapClick(map)
@@ -116,6 +112,25 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             LOCATION_PERMISSION_CODE -> {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    if (ActivityCompat.checkSelfPermission(
+                            context!!,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                            context!!,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+
+                        return
+                    }
+                    map.isMyLocationEnabled = true
+                } else {
+
+                    Snackbar
+                        .make(binding.root, getString(R.string.location_required_error),Snackbar.LENGTH_LONG )
+                        .show()
+
                 }
             }
         }
@@ -143,8 +158,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             map.isMyLocationEnabled = true
         }
         else {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
+
+            requestPermissions(
                 arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_CODE
             )
