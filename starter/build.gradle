@@ -20,6 +20,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'com.google.secrets_gradle_plugin' version '0.5'
+}
+
 allprojects {
     repositories {
         google()
