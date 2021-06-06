@@ -12,7 +12,9 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
 class MyApp : Application() {
-
+    companion object {
+        internal const val ACTION_GEOFENCE_EVENT = "com.udacity.project4.action.ACTION_GEOFENCE_EVENT"
+    }
     override fun onCreate() {
         super.onCreate()
 
