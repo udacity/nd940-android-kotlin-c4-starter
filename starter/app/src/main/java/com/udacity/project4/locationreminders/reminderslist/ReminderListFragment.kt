@@ -1,9 +1,18 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
+import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
+import com.udacity.project4.authentication.AuthenticationViewModel
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -49,6 +58,8 @@ class ReminderListFragment : BaseFragment() {
         super.onResume()
         //load the reminders list on the ui
         _viewModel.loadReminders()
+        observeAuthenticationState()
+
     }
 
     private fun navigateToAddReminder() {
@@ -71,7 +82,7 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
-//                TODO: add the logout implementation
+                AuthUI.getInstance().signOut(requireContext())
             }
         }
         return super.onOptionsItemSelected(item)
@@ -84,4 +95,36 @@ class ReminderListFragment : BaseFragment() {
         inflater.inflate(R.menu.main_menu, menu)
     }
 
+
+    private val viewModel by viewModels<AuthenticationViewModel>()
+/**
+ * Observes the authentication state and changes the UI accordingly.
+ * If there is a logged in user: (1) show a logout button and (2) display their name.
+ * If there is no logged in user: show a login button
+ */
+private fun observeAuthenticationState() {
+
+    viewModel.authenticationState.observe(this, Observer { authenticationState ->
+        when (authenticationState) {
+            AuthenticationViewModel.AuthenticationState.AUTHENTICATED -> {
+//                    binding.welcomeText.text = getFactWithPersonalization(factToDisplay)
+//
+//                    binding.authButton.text = getString(R.string.logout_button_text)
+//                    binding.authButton.setOnClickListener {
+//                        AuthUI.getInstance().signOut(requireContext())
+//                    }
+
+            }
+            else -> {
+//                    binding.welcomeText.text = factToDisplay
+//                    binding.authButton.text = getString(R.string.login_button_text)
+//                    binding.authButton.setOnClickListener {
+//                        launchSignInFlow()
+//                    }
+
+                startActivity(Intent(context, AuthenticationActivity::class.java))
+            }
+        }
+    })
+}
 }
