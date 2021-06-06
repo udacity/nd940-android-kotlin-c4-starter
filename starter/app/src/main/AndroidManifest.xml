@@ -35,9 +35,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".authentication.AuthenticationActivity">
-        </activity>
-        <activity android:name=".locationreminders.RemindersActivity" >
+        <activity android:name=".authentication.AuthenticationActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -45,6 +43,8 @@
             </intent-filter>
 
         </activity>
+        <activity android:name=".locationreminders.RemindersActivity" />
+
         <receiver
             android:name=".locationreminders.geofence.GeofenceBroadcastReceiver"
             android:enabled="true"

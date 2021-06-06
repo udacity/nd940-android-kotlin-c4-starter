@@ -5,6 +5,9 @@ apply plugin: "androidx.navigation.safeargs.kotlin"
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 
+
+
+
 android {
     compileSdkVersion rootProject.compileSdkVersion
     buildToolsVersion "29.0.2"
@@ -16,6 +19,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -98,7 +102,6 @@ dependencies {
     // AndroidX Test - Instrumented testing
     androidTestImplementation "androidx.test:core-ktx:$androidXTestCoreVersion"
     androidTestImplementation "androidx.test.ext:junit-ktx:$androidXTestExtKotlinRunnerVersion"
-    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion"
     androidTestImplementation "androidx.test:rules:$androidXTestRulesVersion"
     androidTestImplementation "androidx.room:room-testing:$roomVersion"
     androidTestImplementation "androidx.arch.core:core-testing:$archTestingVersion"
@@ -115,6 +118,7 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-core:$mockitoVersion"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion"
 
 
 
@@ -122,5 +126,8 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
     implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
 
+    implementation 'com.firebaseui:firebase-ui-auth:5.0.0'
+
+    implementation("androidx.multidex:multidex:2.0.1")
 
 }
