@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import com.udacity.project4.BuildConfig
@@ -32,6 +33,12 @@ fun sendNotification(context: Context, reminderDataItem: ReminderDataItem) {
     }
 
     val intent = ReminderDescriptionActivity.newIntent(context.applicationContext, reminderDataItem)
+    val args = Bundle()
+    args.putString("reminder_desc", reminderDataItem.description)
+    args.putString("reminder_location", reminderDataItem.location)
+    args.putString("reminder_lat", reminderDataItem.latitude.toString())
+    args.putString("reminder_long", reminderDataItem.longitude.toString())
+    intent.putExtra("key_args", args)
 
     //create a pending intent that opens ReminderDescriptionActivity when the user clicks on the notification
     val stackBuilder = TaskStackBuilder.create(context)
