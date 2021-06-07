@@ -4,6 +4,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +18,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -24,6 +26,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -38,6 +41,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private var currentMarker: Marker? = null
     private var currentPOI: PointOfInterest? = null
+
+    private val TAG = SelectLocationFragment::class.java.simpleName
 
     companion object {
         private val REQUEST_LOCATION_PERMISSION = 1
@@ -113,6 +118,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
+
         if (null != _viewModel.selectedPOI.value) {
             currentPOI = _viewModel.selectedPOI.value
             currentMarker = googleMap.addMarker(
@@ -122,8 +128,37 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
             )
         }
-        setPoiClickListener(map)
+
+        setMapLongClick(googleMap)
+        setMapStyle(googleMap)
+        setPoiClickListener(googleMap)
         enableMyLocation()
+    }
+
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapClickListener { latLng ->
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long $2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
+
+            binding.selectLocationSaveButton.setOnClickListener {
+                _viewModel.latitude.value = latLng.latitude
+                _viewModel.longitude.value = latLng.longitude
+                _viewModel.reminderSelectedLocationStr.value = getString(R.string.dropped_pin)
+                _viewModel.navigationCommand.value = NavigationCommand.Back
+            }
+
+            currentMarker = map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title(getString(R.string.dropped_pin))
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            )
+            binding.selectLocationSaveButton.visibility = View.VISIBLE
+        }
     }
 
     private fun setPoiClickListener(map: GoogleMap) {
@@ -170,7 +205,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 googleMap.isMyLocationEnabled = false
             }
         } catch (e: SecurityException) {
-            Log.e("UPDATE_UI:", e.message, e)
+            Log.e(TAG, e.message, e)
         }
     }
 
@@ -198,7 +233,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 }
             }
         } catch (e: SecurityException) {
-            Log.e("GET_DEVICE_LOCATION:", e.message, e)
+            Log.e(TAG, e.message, e)
         }
 
     }
@@ -210,6 +245,25 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    private fun setMapStyle(map: GoogleMap) {
+       try {
+           // Customize the styling of the base map using a JSON object defined
+           // in a raw resource file.
+           val success = map.setMapStyle(
+               MapStyleOptions.loadRawResourceStyle(
+                   requireContext(),
+                   R.raw.map_style
+               )
+           )
+
+           if (!success) {
+               Log.e(TAG, "Style parsing failed.")
+           }
+       } catch (e: Resources.NotFoundException) {
+           Log.e(TAG, "Can't find style. Error: ", e)
+       }
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -218,8 +272,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 enableMyLocation()
+            } else {
+                Snackbar.make(
+                    requireView(),
+                    getString(R.string.location_required_error),
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
     }
-
 }

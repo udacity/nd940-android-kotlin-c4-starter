@@ -30,8 +30,6 @@ private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
 private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
 private const val TAG = "SAVE_REMINDER_FRAGMENT"
-private const val LOCATION_PERMISSION_INDEX = 0
-private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
 private const val GEOFENCE_RADIUS_IN_METERS = 10000f
 
 class SaveReminderFragment : BaseFragment() {
@@ -216,5 +214,12 @@ class SaveReminderFragment : BaseFragment() {
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
             "SaveReminderFragment.project4.action.ACTION_GEOFENCE_EVENT"
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
+            checkDeviceLocationSettingsAndStartGeofence(false)
+        }
     }
 }
