@@ -3,10 +3,12 @@ package com.udacity.project4
 import android.app.Application
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
-import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.udacity.project4.locationreminders.RemindersActivity
@@ -18,6 +20,7 @@ import com.udacity.project4.locationreminders.reminderslist.RemindersListViewMod
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.EspressoIdlingResource
+import com.udacity.project4.util.isToast
 import com.udacity.project4.util.monitorActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -120,12 +123,61 @@ class RemindersActivityTest :
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
         // Check List of added reminder with data displayed
-        Espresso.onView(ViewMatchers.withText(reminder.title))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        Espresso.onView(ViewMatchers.withText(reminder.description))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        Espresso.onView(ViewMatchers.withText(reminder.location))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(withText(reminder.title))
+            .check(matches(isDisplayed()))
+        onView(withText(reminder.description))
+            .check(matches(isDisplayed()))
+        onView(withText(reminder.location))
+            .check(matches(isDisplayed()))
+        // Delay
+        runBlocking {
+            delay(2000)
+        }
+    }
+
+    @Test
+    fun addReminderWithoutTitleAndConfirmSnackbarDisplays(): Unit = runBlocking {
+        // Create new reminder
+        val reminder = getReminder()
+
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderDescription)).perform(replaceText(reminder.description))
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        val snackbarMessage = appContext.getString(R.string.err_enter_title)
+        onView(withText(snackbarMessage))
+            .check(matches(isDisplayed()))
+        activityScenario.close()
+
+        // Delay
+        runBlocking {
+            delay(2000)
+        }
+    }
+
+    @Test
+    fun addReminderAndConfirmToastDisplays(): Unit = runBlocking {
+        // Create new reminder
+        val reminder = getReminder()
+
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+        onView(withId(R.id.reminderTitle)).perform(replaceText(reminder.title))
+        onView(withId(R.id.reminderDescription)).perform(replaceText(reminder.description))
+        onView(withId(R.id.selectLocation)).perform(click())
+
+        onView(withId(R.id.support_map_fragment)).check(matches(isDisplayed()))
+        onView(withId(R.id.support_map_fragment)).perform(click())
+        onView(withId(R.id.select_location_save_button)).perform(click())
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        onView(withText(R.string.reminder_saved)).inRoot(isToast()).check(matches(isDisplayed()))
+        activityScenario.close()
 
         // Delay
         runBlocking {
