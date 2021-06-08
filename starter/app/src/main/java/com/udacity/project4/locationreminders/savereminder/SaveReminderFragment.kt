@@ -115,7 +115,7 @@ class SaveReminderFragment : BaseFragment() {
             else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
         }
         Log.d(TAG, "Requesting foreground only location permission")
-        ActivityCompat.requestPermissions(requireActivity(), permissionArray, resultCode)
+        requestPermissions(permissionArray, resultCode)
     }
 
     private fun checkDeviceLocationSettingsAndStartGeofence(
@@ -136,9 +136,14 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException) {
                 try {
-                    exception.startResolutionForResult(
-                        requireActivity(),
-                        REQUEST_TURN_DEVICE_LOCATION_ON
+                    startIntentSenderForResult(
+                        exception.resolution.intentSender,
+                        REQUEST_TURN_DEVICE_LOCATION_ON,
+                        null,
+                        0,
+                        0,
+                        0,
+                        null
                     )
                 } catch (e: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error resolving location settings:" + e.message)
