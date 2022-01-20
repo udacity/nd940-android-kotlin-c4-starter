@@ -1,6 +1,6 @@
 <resources>
     <!--
-    TODO: Before you release your application, you need a Google Maps API key.
+    TODO: Before you release your application, you need a Google Maps API key. Done
 
     To do this, you can either add your release key credentials to your existing
     key, or create a new key.
@@ -16,5 +16,5 @@
     Once you have your key (it starts with "AIza"), replace the "google_maps_key"
     string in this file.
     -->
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">YOUR_KEY_HERE</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCBNtdbGWogz8m0OeHg63wlni-LjnuTrIk</string>
 </resources>
