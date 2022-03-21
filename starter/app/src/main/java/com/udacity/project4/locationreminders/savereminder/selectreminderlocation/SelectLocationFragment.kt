@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -12,11 +13,16 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.MarkerOptions
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
@@ -54,13 +60,42 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
 
-
 //        TODO: call this function after the user confirms on the selected location
         onLocationSelected()
 
         return binding.root
     }
 
+
+    private fun enableMyLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this.requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this.requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        if (isPermissionGranted()) {
+            map.setMyLocationEnabled(true)
+        }
+        else {
+            ActivityCompat.requestPermissions(
+                this.requireActivity(),
+                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
+            )
+        }
+    }
 
     private fun onLocationSelected() {
         //        TODO: When the user confirms on the selected location,
@@ -73,8 +108,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         inflater.inflate(R.menu.map_options, menu)
     }
 
+
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        // TODO: Change the map type based on the user's selection.
+        // TODO: Change the map type based on the user's selection. DONE
         R.id.normal_map -> {
             map.mapType = GoogleMap.MAP_TYPE_NORMAL
             true
@@ -165,46 +201,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
 
-    private fun setMapStyle(map: GoogleMap){
-        try {
-            val success = map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.activity?.applicationContext, R.raw.map_style))
-            if (!success) {
-                Log.e(ContentValues.TAG, "Style parsing failed.")
-            }
-        }catch (e:Resources.NotFoundException){
-            Log.e(ContentValues.TAG, "Can't find style. Error: ", e)
-        }
-    }
-
-    private fun enableMyLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this.activity?.applicationContext!!,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this.activity?.applicationContext!!,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        if (isPermissionGranted()) {
-            map.setMyLocationEnabled(true)
-        }
-        else {
-            ActivityCompat.requestPermissions(
-                this.activity!!,
-                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
-            )
-        }
-    }
 
 
     private fun isPermissionGranted() : Boolean {
@@ -212,6 +208,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             this.activity?.applicationContext!!,
             Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
+
+
+    private fun setMapStyle(map: GoogleMap){
+        try {
+            val success = map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.requireContext(), R.raw.map_style))
+            if (!success) {
+                Log.e(ContentValues.TAG, "Style parsing failed.")
+            }
+        }catch (e: Resources.NotFoundException){
+            Log.e(ContentValues.TAG, "Can't find style. Error: ", e)
+        }
+    }
+
+
 
 
 }
