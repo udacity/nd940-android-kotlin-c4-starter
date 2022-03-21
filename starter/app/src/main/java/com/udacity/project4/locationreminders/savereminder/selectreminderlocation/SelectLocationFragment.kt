@@ -2,6 +2,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.content.res.Resources
@@ -26,6 +27,13 @@ import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 import java.util.*
 
+private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
+private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
+private const val TAG = "HuntMainActivity"
+private const val LOCATION_PERMISSION_INDEX = 0
+private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
+
 class SelectLocationFragment : BaseFragment(){
 
     //Use Koin to get the view model of the SaveReminder
@@ -34,6 +42,9 @@ class SelectLocationFragment : BaseFragment(){
     private lateinit var map: GoogleMap
     private val REQUEST_LOCATION_PERMISSION = 1
     private val TAG = "SELECTFRAGMENTMAP"
+    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
+            android.os.Build.VERSION_CODES.Q
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,6 +55,9 @@ class SelectLocationFragment : BaseFragment(){
         binding.viewModel = _viewModel
         binding.lifecycleOwner = this
 
+        if(!foregroundAndBackgroundLocationPermissionApproved()){
+            requestForegroundAndBackgroundLocationPermissions()
+        }
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
@@ -198,6 +212,7 @@ class SelectLocationFragment : BaseFragment(){
         }
     }
 
+
     private fun setMapLongClickListener(map:GoogleMap){
 
 
@@ -218,6 +233,51 @@ class SelectLocationFragment : BaseFragment(){
             )
         }
 
+    }
+
+    @TargetApi(29)
+    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
+        val foregroundLocationApproved = (
+                PackageManager.PERMISSION_GRANTED ==
+                        this.activity?.applicationContext?.let {
+                            ActivityCompat.checkSelfPermission(
+                                it,
+                                Manifest.permission.ACCESS_FINE_LOCATION)
+                        })
+        val backgroundPermissionApproved =
+            if (runningQOrLater) {
+                PackageManager.PERMISSION_GRANTED ==
+                        this.activity?.let {
+                            ActivityCompat.checkSelfPermission(
+                                it.applicationContext, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            )
+                        }
+            } else {
+                true
+            }
+        return foregroundLocationApproved && backgroundPermissionApproved
+    }
+
+    @TargetApi(29 )
+    private fun requestForegroundAndBackgroundLocationPermissions() {
+        if (foregroundAndBackgroundLocationPermissionApproved())
+            return
+        var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val resultCode = when {
+            runningQOrLater -> {
+                permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
+            }
+            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+        }
+        Log.d(TAG, "Request foreground only location permission")
+        this.activity?.let {
+            ActivityCompat.requestPermissions(
+                it,
+                permissionsArray,
+                resultCode
+            )
+        }
     }
 
     private fun setOnPoiSelected(map: GoogleMap){
