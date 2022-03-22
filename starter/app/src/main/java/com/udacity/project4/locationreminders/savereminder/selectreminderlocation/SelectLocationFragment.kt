@@ -61,12 +61,7 @@ class SelectLocationFragment : BaseFragment(){
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
-
-//        TODO: add the map setup implementation Done
-//        TODO: zoom to the user location after taking his permission Done
-//        TODO: add style to the map Done
-//        TODO: put a marker to location that the user selected Done
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync{
             googleMap ->
             map = googleMap
@@ -136,10 +131,6 @@ class SelectLocationFragment : BaseFragment(){
     }
 
     private fun onLocationSelected() {
-        //        TODO: When the user confirms on the selected location,
-        //         send back the selected location details to the view model
-        //         and navigate back to the previous fragment to save the reminder and add the geofence
-
 
         if (poi.value == null ){
             Snackbar.make(this.requireView(), "Please select a poi before continuing !",Snackbar.LENGTH_LONG).show()
@@ -161,7 +152,6 @@ class SelectLocationFragment : BaseFragment(){
 
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        // TODO: Change the map type based on the user's selection. DONE
         R.id.normal_map -> {
             map.mapType = GoogleMap.MAP_TYPE_NORMAL
             true

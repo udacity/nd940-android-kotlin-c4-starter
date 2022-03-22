@@ -31,6 +31,7 @@ import org.koin.android.BuildConfig
 import org.koin.android.ext.android.inject
 import java.util.*
 
+const val ACTION_GEOFENCE_INTENT="LOCATION_REMINDER"
 class SaveReminderFragment : BaseFragment() {
     //Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
@@ -47,8 +48,10 @@ class SaveReminderFragment : BaseFragment() {
     private var location: String? = null
     private lateinit var id:String
 
+
     private val geofencePendingIntent:PendingIntent by lazy {
         val intent = Intent(this.activity, GeofenceBroadcastReceiver::class.java)
+        intent.action = ACTION_GEOFENCE_INTENT
         PendingIntent.getBroadcast(this.requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
@@ -90,9 +93,7 @@ class SaveReminderFragment : BaseFragment() {
             longitude = _viewModel.longitude.value
             id = UUID.randomUUID().toString()
 
-//            TODO: use the user entered reminder details to:
-//             1) add a geofencing request Done
-//             2) save the reminder to the local db DONE
+
             val reminderDataItem = ReminderDataItem(title, description, location, latitude, longitude, id = id)
             _viewModel.saveReminder(reminderDataItem)
             checkDeviceLocationSettingsAndStartGeofence()
