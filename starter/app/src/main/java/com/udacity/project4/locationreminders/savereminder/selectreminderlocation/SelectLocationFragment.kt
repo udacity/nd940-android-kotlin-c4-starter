@@ -72,8 +72,8 @@ class SelectLocationFragment : BaseFragment(){
             locationRequest.fastestInterval = 5000
             locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-            val longitude = 40.970911
-            val latitude = 73.076562
+            val longitude = -73.935242
+            val latitude = 40.73061
 
             val latLng = LatLng(longitude, latitude)
             val zoom = 15f
