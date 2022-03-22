@@ -3,9 +3,14 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Criteria
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
+import android.renderscript.ScriptIntrinsicYuvToRGB
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
@@ -36,8 +41,7 @@ class SelectLocationFragment : BaseFragment(){
     private var poi: MutableLiveData<PointOfInterest?> = MutableLiveData(null)
     private val REQUEST_LOCATION_PERMISSION = 1
     private val TAG = "SELECTFRAGMENTMAP"
-    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
-            android.os.Build.VERSION_CODES.Q
+    private var userLocation:Location?=null
 
 
     override fun onCreateView(
@@ -112,7 +116,23 @@ class SelectLocationFragment : BaseFragment(){
                 REQUEST_LOCATION_PERMISSION
             )
         }
-        map.moveCamera(CameraUpdateFactory.zoomIn())
+        getUserLocation()
+        if (userLocation != null){
+            val latLng = LatLng(userLocation!!.latitude, userLocation!!.longitude)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        }
+    }
+
+    private fun getUserLocation(){
+        val locationManager = this.activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        userLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        if (userLocation == null){
+            val criteria = Criteria()
+            criteria.accuracy = Criteria.ACCURACY_COARSE
+            userLocation = locationManager.getBestProvider(criteria, true)
+                ?.let { locationManager.getLastKnownLocation(it) }
+        }
+        Log.i(TAG, "this is user location: $userLocation")
     }
 
     private fun onLocationSelected() {
