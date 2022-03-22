@@ -3,20 +3,29 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.TargetApi
+import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.navigation.fragment.findNavController
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
@@ -40,6 +49,7 @@ class SelectLocationFragment : BaseFragment(){
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
+    private lateinit var poi: MutableLiveData<PointOfInterest>
     private val REQUEST_LOCATION_PERMISSION = 1
     private val TAG = "SELECTFRAGMENTMAP"
     private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
@@ -54,7 +64,11 @@ class SelectLocationFragment : BaseFragment(){
 
         binding.viewModel = _viewModel
         binding.lifecycleOwner = this
+        poi.value = null
 
+        poi.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+            binding.saveLocation.isEnabled = it != null
+        })
         if(!foregroundAndBackgroundLocationPermissionApproved()){
             requestForegroundAndBackgroundLocationPermissions()
         }
@@ -62,17 +76,23 @@ class SelectLocationFragment : BaseFragment(){
         setDisplayHomeAsUpEnabled(true)
 
 
-//        TODO: add the map setup implementation
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
-//        TODO: put a marker to location that the user selected
+//        TODO: add the map setup implementation Done
+//        TODO: zoom to the user location after taking his permission Done
+//        TODO: add style to the map Done
+//        TODO: put a marker to location that the user selected Done
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync{
             googleMap ->
             map = googleMap
+            enableMyLocation()
 
-            val longitude = -1.970911
-            val latitude = 30.076562
+            val locationRequest = LocationRequest()
+            locationRequest.interval = 60000
+            locationRequest.fastestInterval = 5000
+            locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+            val longitude = -16.970911
+            val latitude = 10.076562
 
             var latLng = LatLng(longitude, latitude)
             val zoom = 15f
@@ -82,77 +102,68 @@ class SelectLocationFragment : BaseFragment(){
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.android))
                 .position(latLng, 15f)
             map.addGroundOverlay(androidOverlay)
-            map.addMarker(MarkerOptions().position(latLng))
 
+            val locationCallback = object : LocationCallback(){
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    super.onLocationResult(locationResult)
+                    if (locationResult == null)
+                        return
+                    else{
+                        activity?.let { LocationServices.getFusedLocationProviderClient(it.applicationContext).lastLocation.addOnSuccessListener {
+                                location ->
+                            Log.i(TAG, "last known location: $location")
+                            val fusedLocation: Location = location
+                            latLng = LatLng(fusedLocation.latitude, fusedLocation.longitude)
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
+                        } }
+                    }
+                }
+            }
+            if (foregroundAndBackgroundLocationPermissionApproved()) {
+                activity?.let {
+                    if (this.activity?.let { it1 ->
+                            ActivityCompat.checkSelfPermission(
+                                it1.applicationContext,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            )
+                        } != PackageManager.PERMISSION_GRANTED && this.activity?.let { it1 ->
+                            ActivityCompat.checkSelfPermission(
+                                it1.applicationContext,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        } != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+
+                    }
+                    LocationServices.getFusedLocationProviderClient(it.applicationContext)
+                        .requestLocationUpdates(locationRequest, locationCallback, null)
+                }
+            }
             setMapStyle(map)
             setMapLongClickListener(map)
             setOnPoiSelected(map)
-            enableMyLocation()
-            if (map.isMyLocationEnabled){
-                val fusedLocationClient = this.activity?.let {
-                    LocationServices.getFusedLocationProviderClient(
-                        it
-                    )
-                }
-                if (this.activity?.applicationContext?.let {
-                        ActivityCompat.checkSelfPermission(
-                            it,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        )
-                    } != PackageManager.PERMISSION_GRANTED && this.activity?.let {
-                        ActivityCompat.checkSelfPermission(
-                            it.applicationContext,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
-                        )
-                    } != PackageManager.PERMISSION_GRANTED
-                ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return@getMapAsync
-                }
-                fusedLocationClient?.lastLocation?.addOnSuccessListener {
-                    location ->
-                    latLng = LatLng(location.latitude, location.longitude)
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
-                    Log.i(TAG, "camera moved to user actual location")
-                }
-            }
+
             Log.i(TAG, "map ready")
         }
+        binding.saveLocation.setOnClickListener {
+            onLocationSelected()
+        }
 
-
-//        TODO: call this function after the user confirms on the selected location
-        onLocationSelected()
 
         return binding.root
     }
 
 
     private fun enableMyLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this.requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this.requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
         if (isPermissionGranted()) {
-            map.setMyLocationEnabled(true)
+            map.isMyLocationEnabled = true
         }
         else {
             ActivityCompat.requestPermissions(
@@ -167,6 +178,19 @@ class SelectLocationFragment : BaseFragment(){
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
+
+
+        if (poi.value == null ){
+            Snackbar.make(this.requireView(), "Please select a poi before continuing !",Snackbar.LENGTH_LONG).show()
+        }else {
+            _viewModel.latitude.value = poi.value?.latLng?.latitude
+            _viewModel.longitude.value = poi.value?.latLng?.longitude
+            _viewModel.selectedPOI.value = poi.value
+            findNavController().popBackStack(R.id.saveReminderFragment, false)
+        }
+
+
+
     }
 
 
@@ -233,6 +257,7 @@ class SelectLocationFragment : BaseFragment(){
             )
         }
 
+
     }
 
     @TargetApi(29)
@@ -288,6 +313,7 @@ class SelectLocationFragment : BaseFragment(){
                     .title(poi.name)
             )
             poiMarker?.showInfoWindow()
+            this.poi.value = poi
         }
     }
 
