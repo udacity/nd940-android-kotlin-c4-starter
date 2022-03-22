@@ -80,7 +80,6 @@ class SelectLocationFragment : BaseFragment(){
 
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
             enableMyLocation()
-            map.moveCamera(CameraUpdateFactory.zoomIn())
             val androidOverlay = GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.android))
                 .position(latLng, 15f)
@@ -113,6 +112,7 @@ class SelectLocationFragment : BaseFragment(){
                 REQUEST_LOCATION_PERMISSION
             )
         }
+        map.moveCamera(CameraUpdateFactory.zoomIn())
     }
 
     private fun onLocationSelected() {
