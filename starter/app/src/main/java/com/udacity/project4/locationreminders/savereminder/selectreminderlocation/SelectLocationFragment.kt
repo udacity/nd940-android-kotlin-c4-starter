@@ -2,25 +2,18 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
-import android.annotation.TargetApi
-import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
-import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
@@ -31,17 +24,8 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-
-
 import org.koin.android.ext.android.inject
 import java.util.*
-
-private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
-private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
-private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
-private const val TAG = "HuntMainActivity"
-private const val LOCATION_PERMISSION_INDEX = 0
-private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
 
 class SelectLocationFragment : BaseFragment(){
 
@@ -49,7 +33,7 @@ class SelectLocationFragment : BaseFragment(){
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
-    private lateinit var poi: MutableLiveData<PointOfInterest>
+    private var poi: MutableLiveData<PointOfInterest?> = MutableLiveData(null)
     private val REQUEST_LOCATION_PERMISSION = 1
     private val TAG = "SELECTFRAGMENTMAP"
     private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
@@ -69,9 +53,7 @@ class SelectLocationFragment : BaseFragment(){
         poi.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
             binding.saveLocation.isEnabled = it != null
         })
-        if(!foregroundAndBackgroundLocationPermissionApproved()){
-            requestForegroundAndBackgroundLocationPermissions()
-        }
+
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
@@ -84,68 +66,27 @@ class SelectLocationFragment : BaseFragment(){
         mapFragment.getMapAsync{
             googleMap ->
             map = googleMap
-            enableMyLocation()
 
             val locationRequest = LocationRequest()
             locationRequest.interval = 60000
             locationRequest.fastestInterval = 5000
             locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-            val longitude = -16.970911
-            val latitude = 10.076562
+            val longitude = 40.970911
+            val latitude = 73.076562
 
-            var latLng = LatLng(longitude, latitude)
+            val latLng = LatLng(longitude, latitude)
             val zoom = 15f
 
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
+            enableMyLocation()
+            map.moveCamera(CameraUpdateFactory.zoomIn())
             val androidOverlay = GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.android))
                 .position(latLng, 15f)
             map.addGroundOverlay(androidOverlay)
 
-            val locationCallback = object : LocationCallback(){
-                override fun onLocationResult(locationResult: LocationResult?) {
-                    super.onLocationResult(locationResult)
-                    if (locationResult == null)
-                        return
-                    else{
-                        activity?.let { LocationServices.getFusedLocationProviderClient(it.applicationContext).lastLocation.addOnSuccessListener {
-                                location ->
-                            Log.i(TAG, "last known location: $location")
-                            val fusedLocation: Location = location
-                            latLng = LatLng(fusedLocation.latitude, fusedLocation.longitude)
-                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
-                        } }
-                    }
-                }
-            }
-            if (foregroundAndBackgroundLocationPermissionApproved()) {
-                activity?.let {
-                    if (this.activity?.let { it1 ->
-                            ActivityCompat.checkSelfPermission(
-                                it1.applicationContext,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            )
-                        } != PackageManager.PERMISSION_GRANTED && this.activity?.let { it1 ->
-                            ActivityCompat.checkSelfPermission(
-                                it1.applicationContext,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        } != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
 
-                    }
-                    LocationServices.getFusedLocationProviderClient(it.applicationContext)
-                        .requestLocationUpdates(locationRequest, locationCallback, null)
-                }
-            }
             setMapStyle(map)
             setMapLongClickListener(map)
             setOnPoiSelected(map)
@@ -260,50 +201,6 @@ class SelectLocationFragment : BaseFragment(){
 
     }
 
-    @TargetApi(29)
-    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
-        val foregroundLocationApproved = (
-                PackageManager.PERMISSION_GRANTED ==
-                        this.activity?.applicationContext?.let {
-                            ActivityCompat.checkSelfPermission(
-                                it,
-                                Manifest.permission.ACCESS_FINE_LOCATION)
-                        })
-        val backgroundPermissionApproved =
-            if (runningQOrLater) {
-                PackageManager.PERMISSION_GRANTED ==
-                        this.activity?.let {
-                            ActivityCompat.checkSelfPermission(
-                                it.applicationContext, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                            )
-                        }
-            } else {
-                true
-            }
-        return foregroundLocationApproved && backgroundPermissionApproved
-    }
-
-    @TargetApi(29 )
-    private fun requestForegroundAndBackgroundLocationPermissions() {
-        if (foregroundAndBackgroundLocationPermissionApproved())
-            return
-        var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        val resultCode = when {
-            runningQOrLater -> {
-                permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            }
-            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-        }
-        Log.d(TAG, "Request foreground only location permission")
-        this.activity?.let {
-            ActivityCompat.requestPermissions(
-                it,
-                permissionsArray,
-                resultCode
-            )
-        }
-    }
 
     private fun setOnPoiSelected(map: GoogleMap){
         map.setOnPoiClickListener{poi->
