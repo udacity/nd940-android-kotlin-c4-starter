@@ -10,7 +10,6 @@
     <string name="reminder_saved">Reminder Saved !</string>
     <string name="logout">Logout</string>
     <string name="welcome_to_the_location_reminder_app">Welcome to the location reminder app</string>
-    <string name="login">Login</string>
     <string name="title_activity_maps">Map</string>
     <string name="normal_map">Normal Map</string>
     <string name="hybrid_map">Hybrid Map</string>
