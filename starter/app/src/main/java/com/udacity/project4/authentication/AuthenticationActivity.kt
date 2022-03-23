@@ -24,6 +24,6 @@ class AuthenticationActivity : AppCompatActivity() {
     }
 
     private fun lanchSignInFlow() {
-        TODO("Not yet implemented")
+        // TODO("Not yet implemented")
     }
 }
