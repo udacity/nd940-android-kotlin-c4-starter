@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.udacity.project4.base.BaseViewModel
@@ -10,7 +11,7 @@ import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
-    app: Application,
+    app:Application,
     private val dataSource: ReminderDataSource
 ) : BaseViewModel(app) {
     // list that holds the reminder data to be displayed on the UI
@@ -40,6 +41,7 @@ class RemindersListViewModel(
                             reminder.id
                         )
                     })
+                    Log.i("ReminderListViewModel", "List refreshed: $dataList")
                     remindersList.value = dataList
                 }
                 is Result.Error ->
@@ -57,4 +59,5 @@ class RemindersListViewModel(
     private fun invalidateShowNoData() {
         showNoData.value = remindersList.value == null || remindersList.value!!.isEmpty()
     }
+
 }

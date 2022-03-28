@@ -15,7 +15,7 @@ class AuthenticationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_authentication)
 //         TODO: Implement the create account and sign in using FirebaseUI, use sign in using email and sign in using Google
 
-        lanchSignInFlow()
+        launchSignInFlow()
 //          TODO: If the user was authenticated, send him to RemindersActivity
 
 //          TODO: a bonus is to customize the sign in flow to look nice using :
@@ -23,7 +23,7 @@ class AuthenticationActivity : AppCompatActivity() {
 
     }
 
-    private fun lanchSignInFlow() {
+    private fun launchSignInFlow() {
         // TODO("Not yet implemented")
     }
 }

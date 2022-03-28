@@ -1,27 +1,37 @@
 package com.udacity.project4.locationreminders.data
 
+import androidx.lifecycle.MutableLiveData
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
 class FakeDataSource : ReminderDataSource {
 
-//    TODO: Create a fake data source to act as a double to the real data source
+//    TODO: Create a fake data source to act as a double to the real data source Done
+    val remindersServiceData: LinkedHashMap<String, ReminderDTO> = LinkedHashMap()
+    private val observableReminder = MutableLiveData<Result<List<ReminderDTO>>>()
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        TODO("Return the reminders")
+        if (remindersServiceData.isNotEmpty())
+           return Result.Success(remindersServiceData.values.toList())
+        return Result.Error("no reminder found")
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
-        TODO("save the reminder")
+        remindersServiceData[reminder.id] = reminder
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        TODO("return the reminder with the id")
+        for ( reminder in remindersServiceData.values)
+        {
+            if (reminder.id == id)
+                return Result.Success(reminder)
+        }
+        return Result.Error("No reminder with the given id")
     }
 
     override suspend fun deleteAllReminders() {
-        TODO("delete all the reminders")
+        remindersServiceData.values.clear()
     }
 
 

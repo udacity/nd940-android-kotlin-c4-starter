@@ -33,8 +33,8 @@ task clean(type: Delete) {
 ext {
     // Sdk and tools
     // Support library and architecture components support minSdk 14 and above.
-    minSdkVersion = 16
-    targetSdkVersion = 30
+    minSdkVersion = 21
+    targetSdkVersion = 29
     compileSdkVersion = 30
 
     // App dependencies
@@ -56,7 +56,7 @@ ext {
     truthVersion = '0.44'
     junitVersion = '4.12'
     androidXTestCoreVersion = '1.2.0-beta01'
-    robolectricVersion = '4.3-beta-1'
+    robolectricVersion = '4.3.1'
     androidXTestExtKotlinRunnerVersion = '1.1.1'
     archTestingVersion = '2.0.0'
     playServicesVersion = '17.0.0'

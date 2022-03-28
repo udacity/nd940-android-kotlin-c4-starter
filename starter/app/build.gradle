@@ -7,7 +7,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "com.udacity.project4"
@@ -104,7 +104,9 @@ dependencies {
     androidTestImplementation "androidx.arch.core:core-testing:$archTestingVersion"
     androidTestImplementation "org.robolectric:annotations:$robolectricVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:$espressoVersion"
+    androidTestImplementation ("androidx.test.espresso:espresso-contrib:$espressoVersion"){
+        exclude module: "protobuf-lite"
+    }
     androidTestImplementation "androidx.test.espresso:espresso-intents:$espressoVersion"
     androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:$espressoVersion"
     androidTestImplementation "junit:junit:$junitVersion"
