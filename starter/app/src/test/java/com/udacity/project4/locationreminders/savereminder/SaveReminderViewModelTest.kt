@@ -66,8 +66,6 @@ class SaveReminderViewModelTest {
         mainCoroutineRule.resumeDispatcher()
         assertThat(reminderViewModel.showLoading.getOrAwaitValue(), `is`(false))
         assertThat(reminderViewModel.showToast.getOrAwaitValue(), `is`(resource.getString(R.string.reminder_saved)))
-        // TODO check if it navigate back as expected
-
     }
 
     @Test

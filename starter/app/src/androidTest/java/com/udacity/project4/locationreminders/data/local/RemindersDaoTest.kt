@@ -24,8 +24,6 @@ import java.util.*
 @SmallTest
 class RemindersDaoTest {
 
-    private lateinit var fakeDataSource:FakeDataSource
-    private lateinit var remindersList: List<ReminderDTO>
     private lateinit var database:RemindersDatabase
     private lateinit var reminder:ReminderDTO
 
@@ -46,6 +44,11 @@ class RemindersDaoTest {
 
     @Test
     fun insertData_getById() = runBlocking {
+        // GIVEN - Database
+
+        // WHEN - Save a reminder
+
+        // THEN - Get reminder return the saved reminder and get reminder with a random id return null
         val result = database.reminderDao().getReminderById(reminder.id)
         val falseResult = database.reminderDao().getReminderById(UUID.randomUUID().toString())
         assertThat(result, `is`(reminder))
@@ -54,6 +57,11 @@ class RemindersDaoTest {
 
     @Test
     fun insertData_getAll() = runBlocking {
+        // GIVEN - Database
+
+        // WHEN - Save a reminder
+
+        // THEN - Get reminders gives a list of one element
         val result = database.reminderDao().getReminders()
         assertThat(result.size, `is`(1))
         assertThat(result.first(), `is`(reminder))
@@ -61,7 +69,12 @@ class RemindersDaoTest {
 
     @Test
     fun deleteReminders() = runBlocking {
+        // GIVEN - Database
+
+        // WHEN - Delete data
         database.reminderDao().deleteAllReminders()
+
+        // THEN - Get reminders gives an empty list
         val result = database.reminderDao().getReminders()
         assertThat(result.isEmpty(), `is`(true))
     }

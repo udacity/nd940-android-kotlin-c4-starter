@@ -49,12 +49,6 @@ class SaveReminderFragment : BaseFragment() {
     private lateinit var id:String
 
 
-    private val geofencePendingIntent:PendingIntent by lazy {
-        val intent = Intent(this.activity, GeofenceBroadcastReceiver::class.java)
-        intent.action = ACTION_GEOFENCE_INTENT
-        PendingIntent.getBroadcast(this.requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-    }
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -193,7 +187,7 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask?.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve){
                 try {
-                    exception.startResolutionForResult(this.activity,
+                    exception.startResolutionForResult(this.requireActivity(),
                         REQUEST_TURN_DEVICE_LOCATION_ON)
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
@@ -222,6 +216,7 @@ class SaveReminderFragment : BaseFragment() {
                     .setRequestId(id)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
                     .setExpirationDuration(5000)
+                    .setLoiteringDelay(1000)
                     .build()
             }
         }
@@ -229,6 +224,12 @@ class SaveReminderFragment : BaseFragment() {
             .addGeofence(geofence)
             .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .build()
+
+        val geofencePendingIntent:PendingIntent by lazy {
+            val intent = Intent(this.requireActivity(), GeofenceBroadcastReceiver::class.java)
+            intent.action = ACTION_GEOFENCE_INTENT
+            PendingIntent.getBroadcast(this.requireContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
         geofencingClient.removeGeofences(geofencePendingIntent)?.run {
             addOnCompleteListener {
                 geofencingClient.addGeofences(geofenceRequest, geofencePendingIntent)?.run {
