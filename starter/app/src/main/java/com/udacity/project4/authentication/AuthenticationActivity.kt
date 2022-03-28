@@ -62,7 +62,7 @@ class AuthenticationActivity : AppCompatActivity() {
                 )
                 val intent = Intent(this, RemindersActivity::class.java)
                 startActivity(intent)
-                finishAffinity()
+                this.finishAffinity()
             } else {
                 // Sign in failed. If response is null the user canceled the sign-in flow using
                 // the back button. Otherwise check response.getError().getErrorCode() and handle

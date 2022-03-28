@@ -21,6 +21,8 @@ class RemindersListViewModel(
      * Get all the reminders from the DataSource and add them to the remindersList to be shown on the UI,
      * or show error if any
      */
+
+
     fun loadReminders() {
         showLoading.value = true
         showLoading.postValue(true)
