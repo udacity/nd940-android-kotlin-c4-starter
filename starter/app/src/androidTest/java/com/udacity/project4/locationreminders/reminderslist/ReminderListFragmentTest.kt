@@ -55,14 +55,15 @@ class ReminderListFragmentTest {
 
     //    TODO: test the navigation of the fragments.
     // TODO uncomment the following code
-    /*@Test
+    @Test
     fun addReminderClicked_navigateToAddReminder(){
         // GIVEN - A reminder list fragment
         val scenario = launchFragmentInContainer<ReminderListFragment>(themeResId = R.style.AppTheme)
         val navController = mock(NavController::class.java)
 
         scenario.onFragment {
-            Navigation.setViewNavController(it.requireView(), navController)
+            fragment ->
+            Navigation.setViewNavController(fragment.requireView(), navController)
         }
 
         // WHEN - Click on add reminder button
@@ -70,7 +71,7 @@ class ReminderListFragmentTest {
 
         // THEN - Navigate to add reminder fragment
         verify(navController).navigate(R.id.saveReminderFragment)
-    }*/
+    }
 
 //    TODO: test the displayed data on the UI.
 
