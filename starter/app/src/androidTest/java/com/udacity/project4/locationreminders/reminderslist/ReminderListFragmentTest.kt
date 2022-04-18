@@ -1,7 +1,9 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.app.Application
 import android.os.Bundle
 import androidx.fragment.app.testing.launchFragmentInContainer
+import androidx.navigation.ActionOnlyNavDirections
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.test.core.app.ApplicationProvider
@@ -14,6 +16,7 @@ import androidx.test.filters.MediumTest
 import com.udacity.project4.MainCoroutineRule
 import com.udacity.project4.R
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.data.local.FakeDataSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -23,6 +26,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 
@@ -41,10 +47,19 @@ class ReminderListFragmentTest {
     @Before
     fun initRepository() = mainCoroutineRule.runBlockingTest {
         repository = FakeDataSource()
-        val reminder1 = ReminderDTO("TITLE1", "DESCRIPTION1", "LOCATION1", 0.0, 0.0)
-        repository.saveReminder(reminder1)
-        remindersListViewModel = RemindersListViewModel(ApplicationProvider.getApplicationContext(), repository)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        remindersListViewModel = RemindersListViewModel(application, repository)
+        stopKoin()
 
+        val myModule = module {
+            single {
+                remindersListViewModel
+            }
+        }
+        // new koin module
+        startKoin {
+            modules(listOf(myModule))
+        }
     }
 
 
@@ -53,41 +68,59 @@ class ReminderListFragmentTest {
         repository.deleteAllReminders()
     }
 
-    //    TODO: test the navigation of the fragments.
-    // TODO uncomment the following code
     @Test
     fun addReminderClicked_navigateToAddReminder(){
         // GIVEN - A reminder list fragment
-        val scenario = launchFragmentInContainer<ReminderListFragment>(themeResId = R.style.AppTheme)
-        val navController = mock(NavController::class.java)
-
-        scenario.onFragment {
-            fragment ->
-            Navigation.setViewNavController(fragment.requireView(), navController)
-        }
+        val navController = launchFragment()
 
         // WHEN - Click on add reminder button
         onView(withId(R.id.addReminderFAB)).perform(click())
 
         // THEN - Navigate to add reminder fragment
-        verify(navController).navigate(R.id.saveReminderFragment)
+        verify(navController)?.navigate(ReminderListFragmentDirections.toSaveReminder())
     }
 
-//    TODO: test the displayed data on the UI.
 
     @Test
-    fun saveReminder_reminderDisplayedInUI() {
+    fun saveReminder_reminderDisplayedInUI() = runBlockingTest {
         // GIVEN - A fragment with on saved reminder
-        val scenario = launchFragmentInContainer<ReminderListFragment>(themeResId = R.style.AppTheme)
-        val navController = mock(NavController::class.java)
+        val reminder1 = ReminderDTO("TITLE1", "DESCRIPTION1", "LOCATION1", 0.0, 0.0)
+        repository.saveReminder(reminder1)
 
-        scenario.onFragment {
-            Navigation.setViewNavController(it.requireView(), navController)
-        }
         // WHEN - Fragment launched
-        onView(withText("TITLE1")).check(matches(isDisplayed()))
+        launchFragment()
+
+        // THEN - Saved reminder is displayed
+        val reminders = (repository.getReminders() as Result.Success).data
+        for (element in reminders) {
+            onView(withText(element.title)).check(matches(isDisplayed()))
+            onView(withText(element.description)).check(matches(isDisplayed()))
+            onView(withText(element.location)).check(matches(isDisplayed()))
+        }
     }
 
-//    TODO: add testing for the error messages.
+    private fun launchFragment(): NavController {
+        val scenario =
+            launchFragmentInContainer<ReminderListFragment>(themeResId = R.style.AppTheme)
+        val navController = mock(NavController::class.java)
 
+        scenario.onFragment { fragment ->
+            Navigation.setViewNavController(fragment.requireView(), navController)
+        }
+        return navController
+    }
+
+    @Test
+    fun deleteReminders_getReminders_returnError() = runBlockingTest {
+        // GIVEN - A repository with a null reminder and a fragment
+        repository.reminders = null
+        launchFragment()
+
+        // WHEN - Load reminders
+        remindersListViewModel.loadReminders()
+
+        // THEN - Error message displayed
+        onView(withText("no reminder found")).check(matches(isDisplayed()))
+
+    }
 }

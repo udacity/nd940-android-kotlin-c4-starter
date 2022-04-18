@@ -206,6 +206,7 @@ val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapF
                     .snippet(snipet)
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
+            this.poi.value = PointOfInterest(LatLng(position.latitude, position.longitude), getString(R.string.dropped_pin), "point of interest")
         }
 
 
