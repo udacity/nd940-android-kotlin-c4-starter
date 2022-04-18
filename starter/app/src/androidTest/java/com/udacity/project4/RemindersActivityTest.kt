@@ -53,7 +53,7 @@ class RemindersActivityTest :
         val myModule = module {
             viewModel {
                 RemindersListViewModel(
-                    get(),
+                    appContext,
                     get() as ReminderDataSource
                 )
             }
@@ -102,8 +102,8 @@ class RemindersActivityTest :
         onView(withId(R.id.addReminderFAB)).perform(click())
 
         // adding title and description
-        onView(withId(R.id.title)).perform(replaceText("TITLE1"))
-        onView(withId(R.id.description)).perform(replaceText("DESCRIPTION1"))
+        onView(withId(R.id.reminderTitle)).perform(replaceText("TITLE1"))
+        onView(withId(R.id.reminderDescription)).perform(replaceText("DESCRIPTION1"))
 
         // Navigating to map fragment
         onView(withId(R.id.selectLocation)).perform(click())
