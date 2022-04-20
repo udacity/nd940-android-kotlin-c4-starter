@@ -1,7 +1,13 @@
 package com.udacity.project4
 
+import android.Manifest
+import android.annotation.TargetApi
 import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -41,6 +47,8 @@ class RemindersActivityTest :
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
     private val dataBindingIdlingResource = DataBindingIdlingResource()
+    private val runningQOrLater = android.os.Build.VERSION.SDK_INT >=
+            android.os.Build.VERSION_CODES.Q
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -101,6 +109,10 @@ class RemindersActivityTest :
         // Navigating to save reminder
         onView(withId(R.id.addReminderFAB)).perform(click())
 
+        // Checking if permission is granted or not
+        if (!foregroundAndBackgroundLocationPermissionApproved())
+            onView(withText("ALLOW ALL THE TIME")).perform(click())
+
         // adding title and description
         onView(withId(R.id.reminderTitle)).perform(replaceText("TITLE1"))
         onView(withId(R.id.reminderDescription)).perform(replaceText("DESCRIPTION1"))
@@ -126,4 +138,21 @@ class RemindersActivityTest :
         activityScenario.close()
     }
 
+    @TargetApi(29)
+    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
+        val foregroundLocationApproved = (
+                PackageManager.PERMISSION_GRANTED ==
+                        ActivityCompat.checkSelfPermission(appContext,
+                            Manifest.permission.ACCESS_FINE_LOCATION))
+        val backgroundPermissionApproved =
+            if (runningQOrLater) {
+                PackageManager.PERMISSION_GRANTED ==
+                        ActivityCompat.checkSelfPermission(
+                            appContext, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        )
+            } else {
+                true
+            }
+        return foregroundLocationApproved && backgroundPermissionApproved
+    }
 }

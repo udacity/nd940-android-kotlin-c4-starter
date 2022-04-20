@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
 import android.app.PendingIntent
@@ -215,6 +216,7 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun addGeofenceForClue() {
         val geofence = latitude?.let {
             longitude?.let { it1 ->
@@ -244,7 +246,7 @@ class SaveReminderFragment : BaseFragment() {
                         Toast.makeText(contxt, "Geofence added successfully", Toast.LENGTH_LONG).show()
                     }
                     addOnFailureListener {
-                        Toast.makeText(contxt, "Geofence not added, an exception occurred", Toast.LENGTH_LONG).show()
+                        Toast.makeText(contxt, "An exception occurred: ${it.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }

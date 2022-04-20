@@ -2,6 +2,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -42,6 +43,7 @@ class SelectLocationFragment : BaseFragment(){
     private val REQUEST_LOCATION_PERMISSION = 1
     private val TAG = "SELECTFRAGMENTMAP"
     private var userLocation:Location?=null
+    private lateinit var contxt:Context
 
 
     override fun onCreateView(
@@ -99,7 +101,12 @@ val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapF
         return binding.root
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        contxt = context
+    }
 
+    @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
         if (isPermissionGranted()) {
             map.isMyLocationEnabled = true
@@ -118,6 +125,7 @@ val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapF
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun getUserLocation(){
         val locationManager = this.activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         userLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
@@ -230,7 +238,7 @@ val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapF
 
     private fun isPermissionGranted() : Boolean {
         return ContextCompat.checkSelfPermission(
-            this.activity?.applicationContext!!,
+            contxt,
             Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
