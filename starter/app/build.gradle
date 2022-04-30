@@ -13,6 +13,7 @@ android {
         applicationId "com.udacity.project4"
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.targetSdkVersion
+        multiDexEnabled true
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -22,6 +23,22 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+
+        buildTypes.each {
+            try {
+                it.buildConfigField 'String', 'MAPS_API_KEY', locationReminderGmapsApiKey
+            }
+            catch (exception) {
+                throw new InvalidUserDataException(
+                        " API key Missing: Kindly Check README for supplying your API key from" +
+                                " Google Maps API credentials " + exception.message
+                )
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -79,6 +96,9 @@ dependencies {
     implementation "org.koin:koin-android:$koinVersion"
     implementation "org.koin:koin-androidx-viewmodel:$koinVersion"
 
+    // Firebase
+    implementation "com.firebaseui:firebase-ui-auth:$firebaseVersion"
+
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$junitVersion"
@@ -115,7 +135,6 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-core:$mockitoVersion"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
-
 
 
     //Maps & Geofencing
