@@ -4,17 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="viewModel"
             type="com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <!--TODO: Add the map fragment for the user to select the location-->
 
+        <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".main.ui.map.MapsFragment"
+            map:uiCompass="true"
+            map:uiRotateGestures="true"
+            map:uiScrollGestures="true"
+            map:uiTiltGestures="true"
+            map:uiZoomControls="true"
+            map:uiZoomGestures="true"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:layout_margin="16dp"
+            android:padding="16dp"
+            android:id="@+id/map_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/confirm"
+            android:visibility="invisible" />
+
+    </RelativeLayout>
 </layout>

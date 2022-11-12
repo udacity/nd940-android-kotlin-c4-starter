@@ -116,11 +116,9 @@ dependencies {
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
 
-
-
     //Maps & Geofencing
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
     implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
 
-
+    implementation 'androidx.activity:activity-ktx:1.4.1'
 }
