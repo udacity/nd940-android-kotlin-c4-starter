@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +47,11 @@ class SaveReminderFragment : BaseFragment() {
             val location = _viewModel.reminderSelectedLocationStr.value
             val latitude = _viewModel.latitude
             val longitude = _viewModel.longitude.value
+            Log.v("TAG title", title.toString())
+            Log.v("TAG desc", description.toString())
+            Log.v("TAG location", location.toString())
+            Log.v("TAG lat", latitude.toString())
+            Log.v("TAG lon", longitude.toString())
 
 //            TODO: use the user entered reminder details to:
 //             1) add a geofencing request

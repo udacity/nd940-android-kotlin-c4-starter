@@ -42,4 +42,7 @@
     <string name="error_adding_geofence">Error Happened, Can\'t Add Geofence</string>
     <string name="confirm">Confirm</string>
     <string name="picked_location">Picked Location</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="enable_gps">Enable GPS ?</string>
 </resources>
