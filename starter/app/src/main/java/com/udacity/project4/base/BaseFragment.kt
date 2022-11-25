@@ -24,10 +24,10 @@ abstract class BaseFragment : Fragment() {
             Toast.makeText(activity, it, Toast.LENGTH_LONG).show()
         })
         _viewModel.showSnackBar.observe(this, Observer {
-            Snackbar.make(this.view!!, it, Snackbar.LENGTH_LONG).show()
+            Snackbar.make(this.requireView(), it, Snackbar.LENGTH_LONG).show()
         })
         _viewModel.showSnackBarInt.observe(this, Observer {
-            Snackbar.make(this.view!!, getString(it), Snackbar.LENGTH_LONG).show()
+            Snackbar.make(this.requireView(), getString(it), Snackbar.LENGTH_LONG).show()
         })
 
         _viewModel.navigationCommand.observe(this, Observer { command ->

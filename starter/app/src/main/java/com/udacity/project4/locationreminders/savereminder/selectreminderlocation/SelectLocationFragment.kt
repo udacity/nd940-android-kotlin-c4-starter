@@ -157,7 +157,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         try {
             mMap?.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
-                    context, mapStyle
+                    requireContext(), mapStyle
                 )
             )
         } catch (e: Resources.NotFoundException) {
@@ -181,9 +181,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         var locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                super.onLocationResult(locationResult)
-                locationResult?.lastLocation?.let { location ->
+            override fun onLocationResult(p0: LocationResult) {
+                super.onLocationResult(p0)
+                p0.lastLocation?.let { location ->
                     currentLocation = location
                     if (mMap != null) {
                         mMap?.animateCamera(

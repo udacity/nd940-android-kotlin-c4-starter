@@ -71,7 +71,7 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
-//                TODO: add the logout implementation
+                _viewModel.logOut()
             }
         }
         return super.onOptionsItemSelected(item)
