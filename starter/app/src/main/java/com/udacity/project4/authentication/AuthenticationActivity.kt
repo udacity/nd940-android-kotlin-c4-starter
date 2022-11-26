@@ -2,6 +2,7 @@ package com.udacity.project4.authentication
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
@@ -37,25 +38,8 @@ class AuthenticationActivity : AppCompatActivity() {
         if (currentUser != null) {
             goToNextPhase()
         }
-
-startSignInUi()
-//         TODO: Implement the create account and sign in using FirebaseUI, use sign in using email and sign in using Google
-
-//          TODO: If the user was authenticated, send him to RemindersActivity
-
-//          TODO: a bonus is to customize the sign in flow to look nice using :
+        startSignInUi()
         //https://github.com/firebase/FirebaseUI-Android/blob/master/auth/README.md#custom-layout
-
-//        val signInIntent: Intent = AuthUI.getInstance()
-//            .createSignInIntentBuilder()
-//            .setAvailableProviders(
-//                Arrays.asList(
-//                    GoogleBuilder().build(),
-//                    PhoneBuilder().build()
-//                )
-//            )
-//            .build()
-//        signInLauncher.launch(signInIntent)
     }
 
     private fun startSignInUi() {
@@ -65,7 +49,7 @@ startSignInUi()
             AuthUI.IdpConfig.GoogleBuilder().build(),
         )
 
-// Create and launch sign-in intent
+        // Create and launch sign-in intent
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setAvailableProviders(providers)
@@ -90,6 +74,7 @@ startSignInUi()
             // sign-in flow using the back button. Otherwise check
             // response.getError().getErrorCode() and handle the error.
             // ...
+            Toast.makeText(this, response.toString(), Toast.LENGTH_LONG).show()
             startSignInUi()
         }
     }

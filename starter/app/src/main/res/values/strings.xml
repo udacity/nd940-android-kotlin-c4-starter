@@ -50,4 +50,6 @@
     <string name="failed_please_try_again">Please try again later</string>
     <string name="please_add_description">Please add description</string>
     <string name="please_add_location">Please add location</string>
+    <string name="done">Done</string>
+    <string name="error">Error</string>
 </resources>
