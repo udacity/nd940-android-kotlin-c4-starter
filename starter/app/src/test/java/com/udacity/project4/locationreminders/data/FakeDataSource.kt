@@ -4,25 +4,49 @@ import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
-class FakeDataSource : ReminderDataSource {
+class FakeDataSource(var strangeList: MutableList<ReminderDTO>) : ReminderDataSource {
+    var list: MutableList<ReminderDTO>
 
-//    TODO: Create a fake data source to act as a double to the real data source
+    init {
+        list = strangeList
+//        if (strangeList != null) {
+//            if (strangeList.isNotEmpty()) {
+//                val reminder = ReminderDTO("title", "description", "location", 5.5, 10.5)
+//                list = mutableListOf(reminder)
+//            }
+//        }
+    }
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        TODO("Return the reminders")
+        return Result.Success<List<ReminderDTO>>(list)
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
-        TODO("save the reminder")
+        list.add(reminder)
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        TODO("return the reminder with the id")
+        list.firstOrNull { it.id == id }?.let { return Result.Success(it) }
+        return Result.Error("404")
     }
 
     override suspend fun deleteAllReminders() {
-        TODO("delete all the reminders")
+        list = mutableListOf()
     }
 
+
+
+    fun setShouldFail(shouldFail: Boolean) {
+        this.shouldFail = shouldFail
+    }
+
+//    override suspend fun getReminders(): Result<List<ReminderDTO>> {
+//        return try {
+//            if (shouldFail) throw Exception("Error getting reminders")
+//            Result.Success(reminderList)
+//        } catch (e: Exception) {
+//            Result.Error(e.message)
+//        }
+//    }
 
 }
