@@ -45,4 +45,9 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="enable_gps">Enable GPS ?</string>
+    <string name="add_title">Add title</string>
+    <string name="please_give_us_permission">Pleasae give us permission</string>
+    <string name="failed_please_try_again">Please try again later</string>
+    <string name="please_add_description">Please add description</string>
+    <string name="please_add_location">Please add location</string>
 </resources>
