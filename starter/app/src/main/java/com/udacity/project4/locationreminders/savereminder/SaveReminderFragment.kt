@@ -18,6 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.Geofence.NEVER_EXPIRE
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
@@ -123,13 +124,16 @@ class SaveReminderFragment : BaseFragment() {
                     tempReminderDataItem.longitude!!,
                     5F
                 )
-                .setExpirationDuration(543)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
-
+                .setExpirationDuration(NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .build()
         )
+        val geofencingRequest = GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .addGeofences(geofenceList)
+            .build()
 
-        geofencingClient.addGeofences(getGeofencingRequest(), geofencePendingIntent).run {
+        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
             addOnSuccessListener {
                 _viewModel.validateAndSaveReminder(tempReminderDataItem)
                 findNavController().popBackStack()
@@ -142,13 +146,6 @@ class SaveReminderFragment : BaseFragment() {
                 ).show()
             }
         }
-    }
-
-    private fun getGeofencingRequest(): GeofencingRequest {
-        return GeofencingRequest.Builder().apply {
-            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            addGeofences(geofenceList)
-        }.build()
     }
 
     private fun requestBackgroundLocationPermission() {
