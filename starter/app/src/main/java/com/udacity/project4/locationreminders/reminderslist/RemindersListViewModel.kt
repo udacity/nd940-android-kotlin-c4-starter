@@ -3,7 +3,8 @@ package com.udacity.project4.locationreminders.reminderslist
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -56,7 +57,7 @@ class RemindersListViewModel(
      * call log out repos of firebase to logout of currently signed user
      */
     fun logOut() {
-        FirebaseAuth.getInstance().signOut()
+        Firebase.auth.signOut()
     }
 
     /**
