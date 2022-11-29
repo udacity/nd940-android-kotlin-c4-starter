@@ -123,14 +123,14 @@ class SaveReminderViewModelTest {
     @Test
     fun saveReminder_createAndReturnData() {
         runTest {
-//  Given
+            //      Given
             val remindersData =  ReminderDataItem("title", "description", "location", 5.5, 10.5)
             viewModel.validateAndSaveReminder(remindersData)
 
-//      When
+            //      When
             val result = viewModel.dataSource.getReminders() as Result.Success
 
-//      Then
+            //      Then
             val temp = Result.Success<List<ReminderDataItem>>(listOf(remindersData))
             assertThat(result.data.get(0).title, `is`(temp.data.get(0).title))
             assertThat(result.data.get(0).description, `is`(temp.data.get(0).description))
