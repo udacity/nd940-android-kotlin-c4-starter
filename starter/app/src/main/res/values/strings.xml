@@ -52,4 +52,5 @@
     <string name="please_add_location">Please add location</string>
     <string name="done">Done</string>
     <string name="error">Error</string>
+    <string name="need_permission">Need permission</string>
 </resources>

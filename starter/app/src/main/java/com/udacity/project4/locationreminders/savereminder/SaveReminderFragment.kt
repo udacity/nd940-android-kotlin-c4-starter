@@ -104,10 +104,8 @@ class SaveReminderFragment : BaseFragment() {
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            return
-        }
         val intent = Intent(requireContext(), GeofenceBroadcastReceiver::class.java)
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // addGeofences() and removeGeofences().
@@ -117,7 +115,7 @@ class SaveReminderFragment : BaseFragment() {
             Geofence.Builder()
                 // Set the request ID of the geofence. This is a string to identify this
                 // geofence.
-                .setRequestId(tempReminderDataItem.title.toString())
+                .setRequestId(tempReminderDataItem.id)
 
                 .setCircularRegion(
                     tempReminderDataItem.latitude!!,
@@ -146,6 +144,11 @@ class SaveReminderFragment : BaseFragment() {
                 ).show()
             }
         }
+    }
+    else{
+        Toast.makeText(context,getString(R.string.need_permission),Toast.LENGTH_LONG).show()
+            requestBackgroundLocationPermission()
+    }
     }
 
     private fun requestBackgroundLocationPermission() {
