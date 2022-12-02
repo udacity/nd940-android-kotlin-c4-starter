@@ -14,6 +14,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.*
 import android.widget.Button
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
@@ -31,6 +32,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
@@ -44,26 +46,74 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     var currentLocation: Location? = null
     val LOCATION_ZOOM_DISTANCE = 10.0f
+    var droppedName: String = ""
     private val callback = OnMapReadyCallback { googleMap ->
         mMap = googleMap
         googleMap.setOnMapClickListener {
             latLng = it
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: ${it.latitude}, Long: ${it.longitude}",
+                latLng.latitude,
+                latLng.longitude
+            )
             mapBtn.visibility = View.VISIBLE
             googleMap.clear()
             googleMap.addMarker(
                 MarkerOptions()
                     .position(it)
                     .title(getString(R.string.picked_location))
+                    .snippet(snippet)
             )
-            if (currentLocation != null)
+            droppedName = getString(R.string.picked_location)
+            if (currentLocation != null) {
+                val homeLatLng = LatLng(
+                    currentLocation!!.latitude,
+                    currentLocation!!.longitude
+                )
                 mMap?.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            currentLocation!!.latitude,
-                            currentLocation!!.longitude
-                        ), LOCATION_ZOOM_DISTANCE
+                        homeLatLng, LOCATION_ZOOM_DISTANCE
                     )
                 )
+                mMap?.addMarker(MarkerOptions().position(homeLatLng))
+            } else {
+                Toast.makeText(context, getString(R.string.cannot_get_location), Toast.LENGTH_LONG)
+                    .show()
+            }
+        }
+        googleMap.setOnPoiClickListener {
+            latLng = it.latLng
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: ${latLng.latitude}, Long: ${latLng.longitude}",
+                latLng.latitude,
+                latLng.longitude
+            )
+            mapBtn.visibility = View.VISIBLE
+            googleMap.clear()
+            googleMap.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title(it.name)
+                    .snippet(snippet)
+            )
+            droppedName = it.name
+            if (currentLocation != null) {
+                val homeLatLng = LatLng(
+                    currentLocation!!.latitude,
+                    currentLocation!!.longitude
+                )
+                mMap?.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        homeLatLng, LOCATION_ZOOM_DISTANCE
+                    )
+                )
+                mMap?.addMarker(MarkerOptions().position(homeLatLng))
+            } else {
+//                Toast.makeText(context, getString(R.string.cannot_get_location), Toast.LENGTH_LONG)
+//                    .show()
+            }
         }
     }
 
@@ -113,6 +163,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun onLocationSelected() {
         binding.viewModel?.latitude?.postValue(latLng.latitude)
         binding.viewModel?.longitude?.postValue(latLng.longitude)
+        _viewModel.droppedName.postValue(droppedName)
         findNavController().popBackStack()
     }
 
@@ -122,19 +173,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.normal_map -> {
-            changeMapStyle(R.raw.normal_map)
+            mMap?.mapType = GoogleMap.MAP_TYPE_NORMAL
             true
         }
         R.id.hybrid_map -> {
-            changeMapStyle(R.raw.hybrid_map)
+            mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID
             true
         }
         R.id.satellite_map -> {
-            changeMapStyle(R.raw.satellite_map)
+            mMap?.mapType = GoogleMap.MAP_TYPE_SATELLITE
             true
         }
         R.id.terrain_map -> {
-            changeMapStyle(R.raw.terrain_map)
+            mMap?.mapType = GoogleMap.MAP_TYPE_TERRAIN
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -169,41 +220,50 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            )
+            == PackageManager.PERMISSION_GRANTED &&
+
+            ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            return
-        }
-
-        val locationRequest = LocationRequest().apply {
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-        var locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-                p0.lastLocation?.let { location ->
-                    currentLocation = location
-                    if (mMap != null) {
-                        mMap?.animateCamera(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(
-                                    location.latitude,
-                                    location.longitude
-                                ), LOCATION_ZOOM_DISTANCE
+            val locationRequest = LocationRequest().apply {
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            }
+            var locationCallback = object : LocationCallback() {
+                override fun onLocationResult(p0: LocationResult) {
+                    super.onLocationResult(p0)
+                    p0.lastLocation?.let { location ->
+                        currentLocation = location
+                        if (mMap != null) {
+                            mMap?.animateCamera(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(
+                                        location.latitude,
+                                        location.longitude
+                                    ), LOCATION_ZOOM_DISTANCE
+                                )
                             )
-                        )
+                        }
+                        fusedLocationClient.removeLocationUpdates(this)
                     }
-                    fusedLocationClient.removeLocationUpdates(this)
                 }
             }
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.myLooper()
+            )
+            mMap?.isMyLocationEnabled = true
+        } else {
+            Toast.makeText(
+                context,
+                getString(R.string.need_permission_to_get_your_location),
+                Toast.LENGTH_LONG
+            ).show()
         }
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.myLooper()
-        )
+
     }
 
     override fun onRequestPermissionsResult(
@@ -215,6 +275,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (requestCode == _viewModel.CODE_REQUEST) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 checkGPSEnable()
+                mMap?.isMyLocationEnabled = true
+            } else {
+                Toast.makeText(
+                    context,
+                    getString(R.string.need_permission_to_get_your_location),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
         checkGPSEnable()

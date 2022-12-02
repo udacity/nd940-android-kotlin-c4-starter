@@ -46,11 +46,13 @@
     <string name="no">No</string>
     <string name="enable_gps">Enable GPS ?</string>
     <string name="add_title">Add title</string>
-    <string name="please_give_us_permission">Pleasae give us permission</string>
+    <string name="please_give_us_permission">Please give us permission</string>
     <string name="failed_please_try_again">Please try again later</string>
     <string name="please_add_description">Please add description</string>
     <string name="please_add_location">Please add location</string>
     <string name="done">Done</string>
     <string name="error">Error</string>
     <string name="need_permission">Need permission</string>
+    <string name="cannot_get_location">Cannot get location</string>
+    <string name="need_permission_to_get_your_location">Need permission to get your location</string>
 </resources>
