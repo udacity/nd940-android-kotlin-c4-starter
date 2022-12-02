@@ -32,8 +32,42 @@
             android:id="@+id/textView_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Undefined"
+
             android:padding="64dp" />
+
+        <TextView
+            android:id="@+id/textView_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
+        <TextView
+            android:id="@+id/textView_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
+        <TextView
+            android:id="@+id/textView_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+             />
+
+        <TextView
+            android:id="@+id/textView_lat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+           />
+        <TextView
+            android:id="@+id/textView_lon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+        <TextView
+            android:id="@+id/textView_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
 
     </LinearLayout>
 </layout>

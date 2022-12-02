@@ -13,7 +13,6 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +23,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.location.Geofence.NEVER_EXPIRE
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -153,11 +151,11 @@ class SaveReminderFragment : BaseFragment() {
                     250F
                 )
                 .setExpirationDuration(10000)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER )
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .build()
 
             val geofencingRequest = GeofencingRequest.Builder()
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER )
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
                 .addGeofence(geofenceList)
                 .build()
 
@@ -165,32 +163,19 @@ class SaveReminderFragment : BaseFragment() {
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 checkGPSEnable()
             } else if (foregroundAndBackgroundLocationPermissionApproved()) {
-                geofencingClient.removeGeofences(geofencePendingIntent).run {
-                    addOnCompleteListener {
-                        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)
-                            .run {
-                                addOnSuccessListener {
-                                    _viewModel.validateAndSaveReminder(tempReminderDataItem)
-                                    findNavController().popBackStack()
-                                }
-                                addOnFailureListener {
-                                    Toast.makeText(
-                                        context,
-                                        getString(R.string.failed_please_try_again),
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    findNavController().popBackStack()
-                                }
-                            }
+
+                geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
+                    addOnSuccessListener {
+                        _viewModel.validateAndSaveReminder(tempReminderDataItem)
+                        findNavController().popBackStack()
                     }
                     addOnFailureListener {
                         Toast.makeText(
-                            requireContext(), R.string.geofences_not_added,
-                            Toast.LENGTH_SHORT
+                            context,
+                            getString(R.string.failed_please_try_again),
+                            Toast.LENGTH_LONG
                         ).show()
-                        if ((it.message != null)) {
-                            Log.w("Geofence", it.message.toString())
-                        }
+                        findNavController().popBackStack()
                     }
                 }
             } else {
