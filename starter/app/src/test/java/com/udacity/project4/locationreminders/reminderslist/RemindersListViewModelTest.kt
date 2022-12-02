@@ -7,25 +7,31 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.locationreminders.getOrAwaitValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.junit.runner.RunWith
 import org.koin.core.context.stopKoin
 import org.mockito.Mock
+import org.mockito.Mockito
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class RemindersListViewModelTest {
-
     //(DONE)TODO: provide testing to the RemindersListViewModel and its live data objects
     var reminder = ReminderDTO("title", "description", "location", 5.5, 10.5)
     var list = mutableListOf(reminder)
@@ -39,9 +45,6 @@ class RemindersListViewModelTest {
     @get: Rule
     var instantTaskExecutor = InstantTaskExecutorRule()
 
-    //@get:Rule
-    //var mainCoroutineRule:MainCoroutineDispatcher()
-
     @ExperimentalCoroutinesApi
     class MainDispatcherRule(
         val testDispatcher: TestDispatcher = StandardTestDispatcher()
@@ -54,6 +57,7 @@ class RemindersListViewModelTest {
             Dispatchers.resetMain()
         }
     }
+    @ExperimentalCoroutinesApi
     @get: Rule
     var mainDispatcherRule = MainDispatcherRule()
 
@@ -102,14 +106,39 @@ class RemindersListViewModelTest {
 //        }
     }
 
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+
+    // Other code…
+
+    @get:Rule
+    val testInstantTaskExecutorRule: TestRule = InstantTaskExecutorRule()
+
     @Test
     fun first_testFakeDataBase() {
+//        mainDispatcherRule.runCatching {
+//        }
+//        testInstantTaskExecutorRule.runCatching {
+//        }
         runTest {
-            System.out.println("TAG DEBUGGING" + fakeDataSource.getReminders().toString())
-            System.out.println("TAG DEBUGGING" + list.toString())
+            mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
 
-            MatcherAssert.assertThat(fakeDataSource.getReminders(), Matchers.`is`(Result.Success<List<ReminderDTO>>(list!!)))
+            val result = viewModel.loadReminders()
+
+            assertTrue( viewModel.showLoading.getOrAwaitValue())
+            MatcherAssert.assertThat(viewModel.remindersList.getOrAwaitValue(), Matchers.`is`(Result.Success<List<ReminderDTO>>(list)))
         }
+    }
+
+    @Test
+    fun getReminders() {
+
+        viewModel.loadReminders()
+        mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+        val value = viewModel.remindersList.getOrAwaitValue()
+        val showLoading = viewModel.remindersList.getOrAwaitValue()
+
+        assertEquals(value, Result.Success<List<ReminderDTO>>(list))
     }
 
     @Test

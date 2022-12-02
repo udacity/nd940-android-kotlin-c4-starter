@@ -3,13 +3,18 @@ package com.udacity.project4.locationreminders.data.local
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.util.DataBindingIdlingResource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers
 import org.junit.After
@@ -17,6 +22,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+
+private const val RESOURCE = "GLOBAL"
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -44,21 +51,42 @@ class RemindersLocalRepositoryTest {
                 Dispatchers.Main
             )
     }
+    @Rule
+    @JvmField
+    val dispatchers = DataBindingIdlingResource()
 
+    // LoginTest.kt:
+    @Before
+    fun registerIdlingResource() {
+        IdlingRegistry.getInstance().register(CountingIdlingResourceSingleton.countingIdlingResource)
+    }
+
+    @After
+    fun unregisterIdlingResource() {
+        IdlingRegistry.getInstance().unregister(CountingIdlingResourceSingleton.countingIdlingResource)
+    }
+
+    @JvmField val countingIdlingResource = CountingIdlingResource(RESOURCE)
     @Test
     fun saveReminder_retrievesReminder() {
-        runTest {
-            //Given
-            val newTask = ReminderDTO("title", "description", "22.8745, 88.6971", 22.8745, 88.6971)
-            repository.saveReminder(newTask)
+CoroutineScope(Dispatchers.Main).launch {
+             try {
+                 countingIdlingResource.increment()
+                //Given
+                val newTask =
+                    ReminderDTO("title", "description", "22.8745, 88.6971", 22.8745, 88.6971)
+                repository.saveReminder(newTask)
 
-            //When
-            val result = repository.getReminder(newTask.id)
+                //When
+                val result = repository.getReminder(newTask.id)
 
-            //Then
-            result as Result.Success
-            ViewMatchers.assertThat(result.data.title, CoreMatchers.`is`("title"))
-            ViewMatchers.assertThat(result.data.description, CoreMatchers.`is`("description"))
+                //Then
+                result as Result.Success
+                ViewMatchers.assertThat(result.data.title, CoreMatchers.`is`("title"))
+                ViewMatchers.assertThat(result.data.description, CoreMatchers.`is`("description"))
+            }finally {
+                 countingIdlingResource.decrement() // Set app as idle.
+                 }
         }
     }
 
