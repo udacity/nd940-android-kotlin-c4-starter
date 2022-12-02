@@ -16,6 +16,7 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
  */
 class ReminderDescriptionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReminderDescriptionBinding
+
     companion object {
         private const val EXTRA_ReminderDataItem = "EXTRA_ReminderDataItem"
 
@@ -37,7 +38,7 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         val reminderDescription =
             intent.getSerializableExtra(EXTRA_ReminderDataItem) as ReminderDataItem
 
-       val geofencingClient = LocationServices.getGeofencingClient(this)
+        val geofencingClient = LocationServices.getGeofencingClient(this)
 
         binding.reminderDataItem = reminderDescription
 
@@ -50,6 +51,7 @@ class ReminderDescriptionActivity : AppCompatActivity() {
                         R.string.done,
                         Toast.LENGTH_LONG
                     ).show()
+
                 } else {
                     binding.textViewStatus.text = getString(R.string.error)
                     Toast.makeText(
@@ -60,5 +62,14 @@ class ReminderDescriptionActivity : AppCompatActivity() {
                 }
             }
         }
+        //show details here
+        binding.textViewId.text = reminderDescription.id
+        binding.textViewLocation.text = reminderDescription.location
+        binding.textViewLat.text = reminderDescription.latitude.toString()
+        binding.textViewLon.text = reminderDescription.longitude.toString()
+        binding.textViewTitle.text = reminderDescription.title
+        binding.textViewDesc.text = reminderDescription.description
     }
+
+
 }

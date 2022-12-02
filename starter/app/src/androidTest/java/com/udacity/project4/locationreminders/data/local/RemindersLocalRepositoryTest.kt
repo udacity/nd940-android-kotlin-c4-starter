@@ -1,29 +1,31 @@
 package com.udacity.project4.locationreminders.data.local
 
+import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.idling.CountingIdlingResource
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import com.udacity.project4.util.DataBindingIdlingResource
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import org.hamcrest.CoreMatchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.junit.runner.RunWith
-
-private const val RESOURCE = "GLOBAL"
+import java.io.IOException
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -33,60 +35,69 @@ class RemindersLocalRepositoryTest {
     //  (DONE)  TODO: Add testing implementation to the RemindersLocalRepository.kt
     private lateinit var repository: RemindersLocalRepository
     private lateinit var database: RemindersDatabase
+    private lateinit var dao: RemindersDao
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
-    fun dataBaseSetup() {
+    fun createDb() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            RemindersDatabase::class.java
-        )
-            .allowMainThreadQueries()
-            .build()
-        repository =
-            RemindersLocalRepository(
-                database.reminderDao(),
-                Dispatchers.Main
-            )
-    }
-    @Rule
-    @JvmField
-    val dispatchers = DataBindingIdlingResource()
-
-    // LoginTest.kt:
-    @Before
-    fun registerIdlingResource() {
-        IdlingRegistry.getInstance().register(CountingIdlingResourceSingleton.countingIdlingResource)
+            context, RemindersDatabase::class.java
+        ).build()
+        dao = database.reminderDao()
     }
 
     @After
-    fun unregisterIdlingResource() {
-        IdlingRegistry.getInstance().unregister(CountingIdlingResourceSingleton.countingIdlingResource)
+    @Throws(IOException::class)
+    fun closeDb() {
+        database.close()
     }
 
-    @JvmField val countingIdlingResource = CountingIdlingResource(RESOURCE)
+    @ExperimentalCoroutinesApi
+    class CoroutineTestRule(val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()) :
+        TestWatcher() {
+        override fun starting(description: Description?) {
+            super.starting(description)
+            Dispatchers.setMain(testDispatcher)
+        }
+
+        override fun finished(description: Description?) {
+            super.finished(description)
+            Dispatchers.resetMain()
+            testDispatcher.cleanupTestCoroutines()
+        }
+    }
+
+    @get:Rule
+    var coroutinesTestRule = CoroutineTestRule()
+
+    @Test
+    suspend fun testRoom() {
+        return withContext(Dispatchers.Default) {
+            val newTask = ReminderDTO("title", "description", "22.8745, 88.6971", 22.8745, 88.6971)
+            dao.saveReminder(newTask)
+            val byId = dao.getReminderById(newTask.id)
+            ViewMatchers.assertThat(byId?.id, CoreMatchers.`is`(newTask.id))
+            return@withContext
+        }
+    }
+
     @Test
     fun saveReminder_retrievesReminder() {
-CoroutineScope(Dispatchers.Main).launch {
-             try {
-                 countingIdlingResource.increment()
-                //Given
-                val newTask =
-                    ReminderDTO("title", "description", "22.8745, 88.6971", 22.8745, 88.6971)
-                repository.saveReminder(newTask)
+        runBlocking {
+            //Given
+            val newTask = ReminderDTO("title", "description", "22.8745, 88.6971", 22.8745, 88.6971)
+            repository.saveReminder(newTask)
 
-                //When
-                val result = repository.getReminder(newTask.id)
+            //When
+            val result = repository.getReminder(newTask.id)
 
-                //Then
-                result as Result.Success
-                ViewMatchers.assertThat(result.data.title, CoreMatchers.`is`("title"))
-                ViewMatchers.assertThat(result.data.description, CoreMatchers.`is`("description"))
-            }finally {
-                 countingIdlingResource.decrement() // Set app as idle.
-                 }
+            //Then
+            result as Result.Success
+            ViewMatchers.assertThat(result.data.title, CoreMatchers.`is`("title"))
+            ViewMatchers.assertThat(result.data.description, CoreMatchers.`is`("description"))
         }
     }
 
@@ -121,8 +132,4 @@ CoroutineScope(Dispatchers.Main).launch {
         }
     }
 
-    @After
-    fun dataBaseCloseAfterFinish() {
-        database.close()
-    }
 }
