@@ -31,26 +31,25 @@ import org.koin.test.get
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 //END TO END test to black box test the app
-class RemindersActivityTest :
-    AutoCloseKoinTest() {
+class RemindersActivityTest : AutoCloseKoinTest() {
     // Extended Koin Test - embed autoclose @after method to close Koin after every test
-//    @Before
-//    fun setUp() {
-//        stopKoin()
-//        appContext = getApplicationContext()
-//
-//        startKoin {
-//            modules(modules = module {
-//                viewModel{
-//                    RemindersListViewModel(appContext,get())
-//                }
-//                single { RemindersLocalRepository(get()) } //
-//                single {  LocalDB.createRemindersDao(appContext) }
-//                single { SaveReminderViewModel(appContext, get() ) }  //remidersource
-//            })
-//
-//        }
-//    }
+    @Before
+    fun setUp() {
+        stopKoin()
+        appContext = getApplicationContext()
+
+        startKoin {
+            modules(modules = module {
+                viewModel{
+                    RemindersListViewModel(appContext,get())
+                }
+                single { RemindersLocalRepository(get()) } //
+                single {  LocalDB.createRemindersDao(appContext) }
+                single { SaveReminderViewModel(appContext, get() ) }  //remidersource
+            })
+
+        }
+    }
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
