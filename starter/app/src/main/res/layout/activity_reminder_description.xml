@@ -32,7 +32,8 @@
             android:id="@+id/textView_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Undefined" />
+            android:text="Undefined"
+            android:padding="64dp" />
 
     </LinearLayout>
 </layout>
