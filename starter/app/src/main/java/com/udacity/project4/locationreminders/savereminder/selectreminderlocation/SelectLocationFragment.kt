@@ -12,6 +12,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.Toast
@@ -50,10 +51,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val callback = OnMapReadyCallback { googleMap ->
         mMap = googleMap
         googleMap.setOnMapClickListener {
+            Log.v("MYMAP", "ON CLICK LISTENER")
             latLng = it
             val snippet = String.format(
                 Locale.getDefault(),
-                "Lat: ${it.latitude}, Long: ${it.longitude}",
+                "Lat: ${latLng.latitude}, Long: ${latLng.longitude}",
                 latLng.latitude,
                 latLng.longitude
             )
@@ -66,23 +68,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .snippet(snippet)
             )
             droppedName = getString(R.string.picked_location)
-            if (currentLocation != null) {
-                val homeLatLng = LatLng(
-                    currentLocation!!.latitude,
-                    currentLocation!!.longitude
-                )
-                mMap?.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        homeLatLng, LOCATION_ZOOM_DISTANCE
-                    )
-                )
-                mMap?.addMarker(MarkerOptions().position(homeLatLng))
-            } else {
-                Toast.makeText(context, getString(R.string.cannot_get_location), Toast.LENGTH_LONG)
-                    .show()
-            }
         }
+
         googleMap.setOnPoiClickListener {
+            Log.v("MYMAP", "ON POINTER LISTENER")
             latLng = it.latLng
             val snippet = String.format(
                 Locale.getDefault(),
@@ -99,22 +88,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .snippet(snippet)
             )
             droppedName = it.name
-            if (currentLocation != null) {
-                val homeLatLng = LatLng(
-                    currentLocation!!.latitude,
-                    currentLocation!!.longitude
+        }
+        if (currentLocation != null) {
+            val homeLatLng = LatLng(
+                currentLocation!!.latitude,
+                currentLocation!!.longitude
+            )
+            mMap?.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    homeLatLng, LOCATION_ZOOM_DISTANCE
                 )
-                mMap?.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        homeLatLng, LOCATION_ZOOM_DISTANCE
-                    )
-                )
-                mMap?.addMarker(MarkerOptions().position(homeLatLng))
-            } else {
+            )
+            mMap?.addMarker(MarkerOptions().position(homeLatLng))
+        } else {
 //                Toast.makeText(context, getString(R.string.cannot_get_location), Toast.LENGTH_LONG)
 //                    .show()
-            }
         }
+
     }
 
     override fun onCreateView(
@@ -262,6 +252,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 getString(R.string.need_permission_to_get_your_location),
                 Toast.LENGTH_LONG
             ).show()
+            mMap?.isMyLocationEnabled = false
         }
 
     }
@@ -273,7 +264,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == _viewModel.CODE_REQUEST) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+            val manager = context?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && manager.isProviderEnabled(
+                    LocationManager.GPS_PROVIDER
+                ))
+            ) {
                 checkGPSEnable()
                 mMap?.isMyLocationEnabled = true
             } else {
@@ -282,6 +277,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     getString(R.string.need_permission_to_get_your_location),
                     Toast.LENGTH_LONG
                 ).show()
+                mMap?.isMyLocationEnabled = false
             }
         }
         checkGPSEnable()

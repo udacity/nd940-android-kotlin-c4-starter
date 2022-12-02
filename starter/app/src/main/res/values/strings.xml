@@ -55,4 +55,5 @@
     <string name="need_permission">Need permission</string>
     <string name="cannot_get_location">Cannot get location</string>
     <string name="need_permission_to_get_your_location">Need permission to get your location</string>
+    <string name="please_enable_gps">Please enable gps</string>
 </resources>
