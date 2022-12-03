@@ -12,6 +12,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.Toast
@@ -21,8 +22,10 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
@@ -49,6 +52,29 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     var droppedName: String = ""
     private val callback = OnMapReadyCallback { googleMap ->
         mMap = googleMap
+        mMap!!.setOnMyLocationButtonClickListener(object : OnMyLocationButtonClickListener {
+            override fun onMyLocationButtonClick(): Boolean {
+
+                if (activity?.checkPermission(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        _viewModel.CODE_REQUEST,
+                        _viewModel.CODE_REQUEST
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    checkGPSEnable()
+                } else {
+                    requestPermissions(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ), _viewModel.CODE_REQUEST
+                    )
+                }
+//                zoomToCurrentLocation()
+                return true
+            }
+        })
+        setMapStyle(mMap!!)
         googleMap.setOnMapClickListener {
             latLng = it
             val snippet = String.format(
@@ -64,6 +90,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .position(it)
                     .title(getString(R.string.picked_location))
                     .snippet(snippet)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
             droppedName = getString(R.string.picked_location)
         }
@@ -161,25 +188,29 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.normal_map -> {
             mMap?.mapType = GoogleMap.MAP_TYPE_NORMAL
+//            changeMapStyle(R.raw.normal_map)
             true
         }
         R.id.hybrid_map -> {
             mMap?.mapType = GoogleMap.MAP_TYPE_HYBRID
+//            changeMapStyle(R.raw.hybrid_map)
             true
         }
         R.id.satellite_map -> {
             mMap?.mapType = GoogleMap.MAP_TYPE_SATELLITE
+//            changeMapStyle(R.raw.satellite_map)
             true
         }
         R.id.terrain_map -> {
             mMap?.mapType = GoogleMap.MAP_TYPE_TERRAIN
+//            changeMapStyle(R.raw.terrain_map)
             true
         }
         else -> super.onOptionsItemSelected(item)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        mMap  = googleMap
         if (currentLocation != null)
             mMap?.animateCamera(
                 CameraUpdateFactory.newLatLngZoom(
@@ -189,17 +220,26 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     ), LOCATION_ZOOM_DISTANCE
                 )
             )
+
+
     }
 
-    private fun changeMapStyle(mapStyle: Int) {
+    private fun setMapStyle(map: GoogleMap) {
         try {
-            mMap?.setMapStyle(
+            // Customize the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            val success = map.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
-                    requireContext(), mapStyle
+                    requireContext(),
+                    R.raw.hybrid_map
                 )
             )
+
+            if (!success) {
+                Log.e("TAG", "Style parsing failed.")
+            }
         } catch (e: Resources.NotFoundException) {
-            //maybe show toast for user
+            Log.e("TAG", "Can't find style. Error: ", e)
         }
     }
 
@@ -233,7 +273,24 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                                 )
                             )
                         }
-                        fusedLocationClient.removeLocationUpdates(this)
+//                        fusedLocationClient.removeLocationUpdates(this)
+                        latLng = LatLng(currentLocation?.latitude!!,currentLocation?.longitude!!)
+                        val snippet = String.format(
+                            Locale.getDefault(),
+                            "Lat: ${latLng.latitude}, Long: ${latLng.longitude}",
+                            latLng.latitude,
+                            latLng.longitude
+                        )
+                        mapBtn.visibility = View.VISIBLE
+                        mMap?.clear()
+                        mMap?.addMarker(
+                            MarkerOptions()
+                                .position(latLng)
+                                .title(getString(R.string.picked_location))
+                                .snippet(snippet)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        )
+                        droppedName = getString(R.string.picked_location)
                     }
                 }
             }
@@ -249,7 +306,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 getString(R.string.need_permission_to_get_your_location),
                 Toast.LENGTH_LONG
             ).show()
-            mMap?.isMyLocationEnabled = false
+            mMap?.isMyLocationEnabled = true
         }
 
     }
@@ -274,7 +331,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     getString(R.string.need_permission_to_get_your_location),
                     Toast.LENGTH_LONG
                 ).show()
-                mMap?.isMyLocationEnabled = false
+                mMap?.isMyLocationEnabled = true
             }
         }
         checkGPSEnable()
