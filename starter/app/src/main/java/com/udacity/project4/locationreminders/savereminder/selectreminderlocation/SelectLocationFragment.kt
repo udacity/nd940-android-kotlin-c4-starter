@@ -306,7 +306,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 getString(R.string.need_permission_to_get_your_location),
                 Toast.LENGTH_LONG
             ).show()
-            mMap?.isMyLocationEnabled = true
+//            mMap?.isMyLocationEnabled = true
         }
 
     }
@@ -319,19 +319,16 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == _viewModel.CODE_REQUEST) {
             val manager = context?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && manager.isProviderEnabled(
-                    LocationManager.GPS_PROVIDER
-                ))
-            ) {
-                checkGPSEnable()
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 mMap?.isMyLocationEnabled = true
+                checkGPSEnable()
             } else {
                 Toast.makeText(
                     context,
                     getString(R.string.need_permission_to_get_your_location),
                     Toast.LENGTH_LONG
                 ).show()
-                mMap?.isMyLocationEnabled = true
+//                mMap?.isMyLocationEnabled = true
             }
         }
         checkGPSEnable()

@@ -22,22 +22,33 @@ class FakeDataSource(
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
         withContext(Dispatchers.IO) {
-            if (!isReturnErrors)
+            try {
                 list.add(reminder)
+            } catch (e: java.lang.Exception) {
+                //  return@withContext Result.Error(e.localizedMessage)
+                //  caught Exception
+            }
         }
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> =
         withContext(Dispatchers.IO) {
-            if (!isReturnErrors) {
-                list.first { it.id == id }.let { return@withContext Result.Success(it) }
-            } else
-                return@withContext Result.Error("Error")
+            try {
+                if (!isReturnErrors) {
+                    list.first { it.id == id }.let { return@withContext Result.Success(it) }
+                } else
+                    return@withContext Result.Error("Reminder not found!")
+            } catch (e: java.lang.Exception) {
+                return@withContext Result.Error(e.localizedMessage)
+            }
         }
 
     override suspend fun deleteAllReminders() {
-        if (!isReturnErrors)
-            list = mutableListOf()
+        try {
+            list.clear()
+        } catch (e: java.lang.Exception) {
+            //caught something wrong
+        }
     }
 
 
