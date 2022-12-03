@@ -341,7 +341,7 @@ class ReminderListFragmentTest: AutoCloseKoinTest() {
             RootMatchers.withDecorView(
                 Matchers.not(
                     Matchers.`is`(
-                        getCurrentActivity()?.getWindow()?.getDecorView()
+                        getCurrentActivity()?.window?.decorView
                     )
                 )
             )

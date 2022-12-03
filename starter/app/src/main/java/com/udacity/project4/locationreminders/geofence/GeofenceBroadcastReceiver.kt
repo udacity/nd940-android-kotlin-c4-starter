@@ -35,13 +35,13 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 Log.v("GEOFENCE","GEOFENCE ")
                 if (geofencingEvent!!.hasError()) {
                     val errorMessage = GeofenceStatusCodes
-                        .getStatusCodeString(geofencingEvent!!.errorCode)
+                        .getStatusCodeString(geofencingEvent.errorCode)
                     Log.v("GEOFENCING ERROR", errorMessage.toString())
                     return
                 }
 
             // Get the transition type.
-            val geofenceTransition = geofencingEvent?.geofenceTransition
+            val geofenceTransition = geofencingEvent.geofenceTransition
                 Log.v("GEOFENCE",geofenceTransition.toString())
             // Test that the reported transition was of interest.
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||

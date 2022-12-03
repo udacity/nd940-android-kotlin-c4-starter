@@ -118,7 +118,7 @@ dependencies {
     // Koin for Kotlin apps
     implementation "io.insert-koin:koin-core:$koin_version"
     // Koin for Android
-    implementation "io.insert-koin:koin-android:$koin_version"
+//    implementation "io.insert-koin:koin-android:$koin_version" // dublicated ?
     implementation "io.insert-koin:koin-android-compat:$koin_android_version"
 // Jetpack WorkManager
     implementation "io.insert-koin:koin-androidx-workmanager:$koin_android_version"
