@@ -1,8 +1,11 @@
 package com.udacity.project4.authentication
 
 
+import android.app.Application
 import android.view.View
 import android.view.ViewGroup
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.*
@@ -10,15 +13,30 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
+import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.local.LocalDB
+import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
+import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
+import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.util.DataBindingIdlingResource
+import com.udacity.project4.util.monitorActivity
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.core.IsInstanceOf
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runner.manipulation.Ordering.Context
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
@@ -28,8 +46,13 @@ class AuthenticationActivityTest {
     @JvmField
     var mActivityScenarioRule = ActivityScenarioRule(AuthenticationActivity::class.java)
 
+
     @Test
     fun authenticationActivityTest() {
+        Thread.sleep(1000)
+        val scenario = ActivityScenario.launch(AuthenticationActivity::class.java)
+        DataBindingIdlingResource().monitorActivity(scenario)
+        Thread.sleep(1000)
         val view = onView(
             allOf(
                 withId(android.R.id.statusBarBackground),
@@ -37,8 +60,9 @@ class AuthenticationActivityTest {
                 isDisplayed()
             )
         )
+        Thread.sleep(1000)
         view.check(matches(isDisplayed()))
-
+        Thread.sleep(1000)
         val materialButton = onView(
             allOf(
                 withId(com.firebase.ui.auth.R.id.email_button), withText("Sign in with email"),
@@ -54,8 +78,9 @@ class AuthenticationActivityTest {
                 )
             )
         )
+        Thread.sleep(1000)
         materialButton.perform(scrollTo(), click())
-
+        Thread.sleep(1000)
         val textInputEditText = onView(
             allOf(
                 withId(com.firebase.ui.auth.R.id.email),
@@ -216,4 +241,36 @@ class AuthenticationActivityTest {
             }
         }
     }
+
+    @Before
+    fun initKoin(){
+        stopKoin()
+//        val   instrumentationContext = InstrumentationRegistry.getInstrumentation().context
+        val instrumentationContext = ApplicationProvider.getApplicationContext<Application>()
+        val myModule = module {
+            //Declare a ViewModel - be later inject into Fragment with dedicated injector using by viewModel()
+            viewModel {
+                RemindersListViewModel(
+                    get(),
+                    get() as ReminderDataSource
+                )
+            }
+            //Declare singleton definitions to be later injected using by inject()
+            single {
+                //This view model is declared singleton to be used across multiple fragments
+                SaveReminderViewModel(
+                    get(),
+                    get() as ReminderDataSource
+                )
+            }
+            single { RemindersLocalRepository(get()) }
+            single { LocalDB.createRemindersDao(instrumentationContext) }
+        }
+
+        startKoin {
+//            androidContext(instrumentationContext)
+            modules(listOf(myModule))
+        }
+    }
+
 }

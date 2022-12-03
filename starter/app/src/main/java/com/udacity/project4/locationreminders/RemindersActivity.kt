@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.udacity.project4.R
 
 
+
 /**
  * The RemindersActivity that holds the reminders fragments
  */

@@ -2,8 +2,12 @@ package com.udacity.project4.authentication
 
 
 import android.app.Activity
+import android.app.Application
 import android.view.View
 import android.view.ViewGroup
+import androidx.room.Room
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.*
@@ -14,21 +18,59 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.GrantPermissionRule
-import com.google.android.material.internal.ContextUtils.getActivity
 import com.udacity.project4.R
 import com.udacity.project4.locationreminders.RemindersActivity
+import com.udacity.project4.locationreminders.data.local.LocalDB
+import com.udacity.project4.locationreminders.data.local.RemindersDatabase
+import com.udacity.project4.util.DataBindingIdlingResource
+import com.udacity.project4.util.monitorActivity
+import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
 import org.hamcrest.TypeSafeMatcher
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 class AuthenticationActivityTest2 {
+    @Before
+    fun init() {
+        stopKoin()//stop the original app koin
+        val appContext = ApplicationProvider.getApplicationContext<Application>()
+        val myModule = module {
+            single {
+                Room.databaseBuilder(
+                    appContext,
+                    RemindersDatabase::class.java,
+                    RemindersDatabase::class.java.simpleName
+                )
+                    .fallbackToDestructiveMigration().build()
+            }
+            single { get<LocalDB>().createRemindersDao(appContext) }
+            single { LocalDB.createRemindersDao(appContext) }
+        }
+
+        //declare a new koin module
+        startKoin {
+//            androidContext(appContext)
+            modules(listOf(myModule))
+        }
+        //Get our real repository
+//        repository = get()
+
+        //clear the data to start fresh
+        runBlocking {
+//            repository.deleteAllReminders()
+        }
+    }
 
     @Rule
     @JvmField
@@ -48,8 +90,14 @@ class AuthenticationActivityTest2 {
         }
         return activity[0]
     }
+
     @Test
     fun checkOnAddingRemindersValidation() {
+        Thread.sleep(1000)
+        val scenario = ActivityScenario.launch(AuthenticationActivity::class.java)
+        DataBindingIdlingResource().monitorActivity(scenario)
+        Thread.sleep(1000)
+        Thread.sleep(1000)
         val floatingActionButton = onView(
             allOf(
                 withId(R.id.addReminderFAB),
@@ -64,7 +112,7 @@ class AuthenticationActivityTest2 {
             )
         )
         floatingActionButton.perform(click())
-
+        Thread.sleep(1000)
         val appCompatEditText = onView(
             allOf(
                 withId(R.id.reminderDescription),
@@ -78,13 +126,14 @@ class AuthenticationActivityTest2 {
                 isDisplayed()
             )
         )
+        Thread.sleep(1000)
         appCompatEditText.perform(
             replaceText("lets edit description and for "),
             closeSoftKeyboard()
         )
-
+        Thread.sleep(1000)
         pressBack()
-
+        Thread.sleep(1000)
         val appCompatEditText2 = onView(
             allOf(
                 withId(R.id.reminderDescription), withText("lets edit description and for "),
@@ -149,7 +198,7 @@ class AuthenticationActivityTest2 {
             withDecorView(
                 not(
                     `is`(
-                        getCurrentActivity()?.getWindow()?.getDecorView()
+                        getCurrentActivity()?.window?.decorView
                     )
                 )
             )

@@ -35,18 +35,18 @@ class RemindersActivityTest : AutoCloseKoinTest() {
     // Extended Koin Test - embed autoclose @after method to close Koin after every test
     @Before
     fun setUp() {
-        stopKoin()
-        appContext = getApplicationContext()
+//        stopKoin()
+//        appContext = getApplicationContext()
 
-        startKoin {
-            modules(modules = module {
-                viewModel{
-                    RemindersListViewModel(appContext,get())
-                }
-                single { RemindersLocalRepository(get()) } //
-                single {  LocalDB.createRemindersDao(appContext) }
-                single { SaveReminderViewModel(appContext, get() ) }  //remidersource
-            })
+//        startKoin {
+//            modules(modules = module {
+//                viewModel{
+//                    RemindersListViewModel(appContext,get())
+//                }
+//                single { RemindersLocalRepository(get()) } //
+//                single {  LocalDB.createRemindersDao(appContext) }
+//                single { SaveReminderViewModel(appContext, get() ) }  //remidersource
+//            })
 
         }
     }
@@ -60,30 +60,30 @@ class RemindersActivityTest : AutoCloseKoinTest() {
      */
     @Before
     fun init() {
-        stopKoin()//stop the original app koin
-        appContext = getApplicationContext()
-        val myModule = module {
-            viewModel {
-                RemindersListViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single {
-                SaveReminderViewModel(
-                    appContext,
-                    get() as ReminderDataSource
-                )
-            }
-            single { RemindersLocalRepository(get()) }
-            single { LocalDB.createRemindersDao(appContext) }
-        }
-        //declare a new koin module
-        startKoin {
-            modules(listOf(myModule))
-        }
-        //Get our real repository
-        repository = get()
+//        stopKoin()//stop the original app koin
+//        appContext = getApplicationContext()
+//        val myModule = module {
+//            viewModel {
+//                RemindersListViewModel(
+//                    appContext,
+//                    get() as ReminderDataSource
+//                )
+//            }
+//            single {
+//                SaveReminderViewModel(
+//                    appContext,
+//                    get() as ReminderDataSource
+//                )
+//            }
+//            single { RemindersLocalRepository(get()) }
+//            single { LocalDB.createRemindersDao(appContext) }
+//        }
+//        declare a new koin module
+//        startKoin {
+//            modules(listOf(myModule))
+//        }
+//        Get our real repository
+//        repository = get()
 
         //clear the data to start fresh
         runBlocking {
@@ -150,4 +150,4 @@ class RemindersActivityTest : AutoCloseKoinTest() {
         //finish the testing
         remindersActivity.close()
     }
-}
+//}

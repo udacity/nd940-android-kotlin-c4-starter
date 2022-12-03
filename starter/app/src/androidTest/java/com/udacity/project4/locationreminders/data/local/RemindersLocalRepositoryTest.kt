@@ -1,7 +1,6 @@
 package com.udacity.project4.locationreminders.data.local
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.matcher.ViewMatchers
@@ -12,40 +11,39 @@ import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import org.hamcrest.CoreMatchers
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 import org.junit.runner.RunWith
+import org.koin.core.context.stopKoin
+import org.koin.test.AutoCloseKoinTest
 import java.io.IOException
+import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 //Medium Test to test the repository
 @MediumTest
-class RemindersLocalRepositoryTest {
+class RemindersLocalRepositoryTest : AutoCloseKoinTest() {
     //  (DONE)  TODO: Add testing implementation to the RemindersLocalRepository.kt
     private lateinit var repository: RemindersLocalRepository
     private lateinit var database: RemindersDatabase
     private lateinit var dao: RemindersDao
 
-    @get:Rule
-    var instantExecutorRule = InstantTaskExecutorRule()
+//    @get:Rule
+//    var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun createDb() {
+        stopKoin()
+
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(
             context, RemindersDatabase::class.java
-        ).build()
+        ).setTransactionExecutor(Executors.newSingleThreadExecutor()).build()
         dao = database.reminderDao()
     }
 
@@ -55,23 +53,23 @@ class RemindersLocalRepositoryTest {
         database.close()
     }
 
-    @ExperimentalCoroutinesApi
-    class CoroutineTestRule(val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()) :
-        TestWatcher() {
-        override fun starting(description: Description?) {
-            super.starting(description)
-            Dispatchers.setMain(testDispatcher)
-        }
+//    @ExperimentalCoroutinesApi
+//    class CoroutineTestRule(val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()) :
+//        TestWatcher() {
+//        override fun starting(description: Description?) {
+//            super.starting(description)
+//            Dispatchers.setMain(testDispatcher)
+//        }
+//
+//        override fun finished(description: Description?) {
+//            super.finished(description)
+//            Dispatchers.resetMain()
+//            testDispatcher.cleanupTestCoroutines()
+//        }
+//    }
 
-        override fun finished(description: Description?) {
-            super.finished(description)
-            Dispatchers.resetMain()
-            testDispatcher.cleanupTestCoroutines()
-        }
-    }
-
-    @get:Rule
-    var coroutinesTestRule = CoroutineTestRule()
+//    @get:Rule
+//    var coroutinesTestRule = CoroutineTestRule()
 
     @Test
     suspend fun testRoom() {
