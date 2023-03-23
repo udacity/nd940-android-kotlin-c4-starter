@@ -69,7 +69,7 @@ Explain what each test does and why
 ## Student Deliverables:
 
 1. APK file of the final project.
-2. Git Repository with the code.
+2. Git Repository or zip file with the code.
 
 ## Built With
 

@@ -1,5 +1,6 @@
-#*.iml
-#.gradle
+*.iml
+.gradle
+**/.idea/
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -7,10 +8,10 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-#.DS_Store
+.DS_Store
 /build
 /captures
-#.externalNativeBuild
+.externalNativeBuild
 .cxx
 
 # Created by https://www.toptal.com/developers/gitignore/api/androidstudio,android,macos,kotlin,gradle
