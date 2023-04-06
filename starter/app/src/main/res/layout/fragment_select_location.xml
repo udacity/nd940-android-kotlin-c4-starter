@@ -14,6 +14,45 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <!--TODO: Add the map fragment for the user to select the location-->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/google_map"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:context=".locationreminders.RemindersActivity"
+            tools:layout="@layout/fragment_select_location" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_poi"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textAlignment="center"
+            android:background="@drawable/shape_circle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="@dimen/margin_normal"
+            android:padding="8dp"
+            android:gravity="center_horizontal" />
+
+        <Button
+            android:id="@+id/save_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save"
+            android:background="@drawable/button_circle"
+            android:backgroundTint="@color/colorPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="@dimen/margin_normal"
+            android:visibility="gone"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

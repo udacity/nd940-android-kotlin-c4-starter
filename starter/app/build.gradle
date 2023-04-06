@@ -60,6 +60,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation project(path: ':app')
     // App dependencies
     implementation "androidx.appcompat:appcompat:$appCompatVersion"
     implementation "androidx.legacy:legacy-support-v4:$androidXLegacySupport"
