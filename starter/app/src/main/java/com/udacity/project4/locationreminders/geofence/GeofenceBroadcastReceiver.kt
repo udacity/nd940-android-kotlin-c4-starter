@@ -13,11 +13,8 @@ import android.content.Intent
  * To do that you can use https://developer.android.com/reference/android/support/v4/app/JobIntentService to do that.
  *
  */
-
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-
-//TODO: implement the onReceive method to receive the geofencing events at the background
-
+        // TODO: implement the onReceive method to receive the geofencing events at the background
     }
 }

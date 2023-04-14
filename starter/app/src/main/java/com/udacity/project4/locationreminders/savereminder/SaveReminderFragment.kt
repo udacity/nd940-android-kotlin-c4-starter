@@ -13,21 +13,19 @@ import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 
 class SaveReminderFragment : BaseFragment() {
-    //Get the view model this time as a single to be shared with the another fragment
+
+    // Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSaveReminderBinding
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding =
-            DataBindingUtil.inflate(inflater, R.layout.fragment_save_reminder, container, false)
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
+        val layoutId = R.layout.fragment_save_reminder
+        binding = DataBindingUtil.inflate(inflater, layoutId, container, false)
 
         setDisplayHomeAsUpEnabled(true)
-
         binding.viewModel = _viewModel
-
         return binding.root
     }
 
@@ -35,9 +33,10 @@ class SaveReminderFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
         binding.selectLocation.setOnClickListener {
-            //            Navigate to another fragment to get the user location
-            _viewModel.navigationCommand.value =
-                NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment())
+            // Navigate to another fragment to get the user location
+            val directions = SaveReminderFragmentDirections
+                .actionSaveReminderFragmentToSelectLocationFragment()
+            _viewModel.navigationCommand.value = NavigationCommand.To(directions)
         }
 
         binding.saveReminder.setOnClickListener {
@@ -47,15 +46,15 @@ class SaveReminderFragment : BaseFragment() {
             val latitude = _viewModel.latitude
             val longitude = _viewModel.longitude.value
 
-//            TODO: use the user entered reminder details to:
-//             1) add a geofencing request
-//             2) save the reminder to the local db
+            // TODO: use the user entered reminder details to:
+            //  1) add a geofencing request
+            //  2) save the reminder to the local db
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        //make sure to clear the view model after destroy, as it's a single view model.
+        // Make sure to clear the view model after destroy, as it's a single view model.
         _viewModel.onClear()
     }
 }
