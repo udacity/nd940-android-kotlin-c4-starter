@@ -5,4 +5,8 @@
         android:id="@+id/logout"
         android:title="@string/logout"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/show_maps"
+        android:title="@string/maps"
+        app:showAsAction="always" />
 </menu>

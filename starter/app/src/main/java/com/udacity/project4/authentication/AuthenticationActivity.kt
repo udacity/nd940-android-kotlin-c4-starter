@@ -33,7 +33,9 @@ class AuthenticationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val layoutId = R.layout.activity_authentication
         binding = DataBindingUtil.setContentView(this, layoutId)
-        binding.authButton.text = getString(R.string.login_button_text)
+        binding.authButton.text = getString(R.string.login)
+
+        AuthUI.getInstance().signOut(this)
     }
 
     override fun onResume() {
@@ -89,14 +91,14 @@ class AuthenticationActivity : AppCompatActivity() {
     }
 
     private fun loginOnFirebase() {
-        binding.authButton.text = getString(R.string.login_button_text)
+        binding.authButton.text = getString(R.string.login)
         binding.authButton.setOnClickListener {
             launchSignInFlow()
         }
     }
 
     private fun logoutFromFirebase() {
-        binding.authButton.text = getString(R.string.logout_button_text)
+        binding.authButton.text = getString(R.string.logout)
         binding.authButton.setOnClickListener {
             AuthUI.getInstance().signOut(this)
         }
