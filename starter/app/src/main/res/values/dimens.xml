@@ -9,4 +9,8 @@
     <dimen name="padding_medium">10dp</dimen>
     <dimen name="padding_large">20dp</dimen>
     <dimen name="margin_normal">16dp</dimen>
+
+    <dimen name="text_margin">20dp</dimen>
+    <dimen name="text_padding">10dp</dimen>
+    <dimen name="button_text_size">20sp</dimen>
 </resources>
