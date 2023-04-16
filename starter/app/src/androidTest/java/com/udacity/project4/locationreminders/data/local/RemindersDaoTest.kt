@@ -21,10 +21,8 @@ import org.junit.Test
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-//Unit test the DAO
+// Unit test the DAO
 @SmallTest
 class RemindersDaoTest {
-
-//    TODO: Add testing implementation to the RemindersDao.kt
-
+    // TODO: Add testing implementation to the RemindersDao.kt
 }
