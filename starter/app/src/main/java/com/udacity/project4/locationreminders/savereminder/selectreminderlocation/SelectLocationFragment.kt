@@ -7,8 +7,12 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.activity.OnBackPressedCallback
 import androidx.core.app.ActivityCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Lifecycle
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationRequest
@@ -23,6 +27,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
+import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -42,7 +47,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override val _viewModel: SaveReminderViewModel by inject()
 
     private lateinit var map: GoogleMap
-    private lateinit var locationClient: FusedLocationProviderClient
+    private var locationClient: FusedLocationProviderClient? = null
     private lateinit var locationRequest: LocationRequest
 
     private lateinit var binding: FragmentSelectLocationBinding
@@ -59,8 +64,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         binding.viewModel = _viewModel
         binding.lifecycleOwner = this
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressHandler)
 
-        setHasOptionsMenu(true)
+//        setHasOptionsMenu(true)
+        val menuHost: MenuHost = requireActivity()
+        addMenu(menuHost)
+
         setDisplayHomeAsUpEnabled(true)
 
         // Add the map setup implementation.
@@ -76,9 +85,54 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    private fun addMenu(menuHost: MenuHost) {
+        // Add menu items without using the Fragment Menu APIs
+        // Note how we can tie the MenuProvider to the viewLifecycleOwner
+        // and an optional Lifecycle.State (here, RESUMED) to indicate when
+        // the menu should be visible
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.map_options, menu)
+            }
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                when (menuItem.itemId) {
+                    R.id.normal_map -> {
+                        map.mapType = GoogleMap.MAP_TYPE_NORMAL
+                        true
+                    }
+                    R.id.hybrid_map -> {
+                        map.mapType = GoogleMap.MAP_TYPE_HYBRID
+                        true
+                    }
+                    R.id.satellite_map -> {
+                        map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+                        true
+                    }
+                    R.id.terrain_map -> {
+                        map.mapType = GoogleMap.MAP_TYPE_TERRAIN
+                        true
+                    }
+                    android.R.id.home -> {
+                        requireActivity().onBackPressedDispatcher.onBackPressed()
+                        true
+                    }
+                }
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    private val backPressHandler = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            _viewModel.navigationCommand.postValue(
+                NavigationCommand.Back
+            )
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        locationClient.flushLocations()
+        locationClient?.flushLocations()
 //        locationClient.removeLocationUpdates(this)
     }
 
@@ -86,6 +140,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // Menu Methods
     //--------------------------------------------------
 
+    /*
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)
     }
@@ -108,8 +163,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             map.mapType = GoogleMap.MAP_TYPE_TERRAIN
             true
         }
+        android.R.id.home -> {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+            true
+        }
         else -> super.onOptionsItemSelected(item)
     }
+     */
 
     //--------------------------------------------------
     // Location Methods
@@ -165,11 +225,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
          */
 
         locationClient = getFusedLocationProviderClient(requireActivity())
-        locationClient.lastLocation
-            .addOnSuccessListener { location -> // GPS location can be null if GPS is switched off
+        locationClient?.lastLocation
+            ?.addOnSuccessListener { location -> // GPS location can be null if GPS is switched off
                 location?.let { goToLocation(location.latitude, location.longitude) }
             }
-            .addOnFailureListener { e ->
+            ?.addOnFailureListener { e ->
                 Log.d("MapDemoActivity", "Error trying to get last GPS location")
                 e.printStackTrace()
             }

@@ -11,7 +11,7 @@
         android:label="Reminder List Fragment"
         tools:layout="@layout/fragment_reminders">
         <action
-            android:id="@+id/to_save_reminder"
+            android:id="@+id/action_reminderListFragment_to_saveReminderFragment"
             app:destination="@id/saveReminderFragment" />
     </fragment>
 
@@ -32,5 +32,9 @@
         android:id="@+id/selectLocationFragment"
         android:name="com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment"
         android:label="Select Location"
-        tools:layout="@layout/fragment_select_location" />
+        tools:layout="@layout/fragment_select_location">
+        <action
+            android:id="@+id/action_selectLocationFragment_to_saveReminderFragment"
+            app:destination="@id/saveReminderFragment" />
+    </fragment>
 </navigation>

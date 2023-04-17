@@ -4,7 +4,7 @@ buildscript {
     ext {
         gradleVersion = '7.4.2'
         kotlinVersion = '1.8.0'
-            navigationVersion = '2.5.3'
+        navigationVersion = '2.5.3'
 
         // Sdk and tools
         // Support library and architecture components support minSdk 14 and above.

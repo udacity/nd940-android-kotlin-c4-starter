@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
+import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.databinding.ActivityRemindersBinding
 
 /**
@@ -19,6 +20,7 @@ class RemindersActivity : AppCompatActivity() {
         setContentView(binding.root)
     }
 
+    /*
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
@@ -28,4 +30,5 @@ class RemindersActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+     */
 }
