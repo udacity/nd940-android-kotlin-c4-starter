@@ -30,6 +30,6 @@
             android:textSize="@dimen/button_text_size"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            tools:text="@string/login_button_text" />
+            tools:text="@string/login" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

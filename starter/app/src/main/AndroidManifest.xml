@@ -42,7 +42,6 @@
 
         <activity android:name=".locationreminders.RemindersActivity" />
         <activity android:name=".locationreminders.ReminderDescriptionActivity" />
-        <activity android:name=".maps.MapsActivity" />
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
