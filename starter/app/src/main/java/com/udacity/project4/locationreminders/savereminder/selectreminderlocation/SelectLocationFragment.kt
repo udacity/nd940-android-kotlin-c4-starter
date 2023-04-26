@@ -47,7 +47,6 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.*
 
-
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     //--------------------------------------------------
@@ -56,11 +55,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     companion object {
         private val TAG = SelectLocationFragment::class.java.simpleName
-        private const val MY_PERMISSIONS_REQUEST_LOCATION = 99
-        private const val MY_PERMISSIONS_REQUEST_BACKGROUND_LOCATION = 66
         private const val UPDATE_INTERVAL = (10 * 1000).toLong() // 10 secs
         private const val FASTEST_INTERVAL: Long = 2000 // 2 secs
-        private const val GO_TO_SETTINGS = 33
         private const val FINE = Manifest.permission.ACCESS_FINE_LOCATION
         private const val BACK = Manifest.permission.ACCESS_BACKGROUND_LOCATION
     }
@@ -68,8 +64,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private var map: GoogleMap? = null
-    private var checkedGpsBefore = false
-    private var permissionAskedForUser = false
 
     private var alertPleaseAcceptAllowAllTime: AlertDialog? = null
     private var alertShouldEnableGps: AlertDialog? = null
@@ -93,13 +87,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private var locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            Log.d(TAG, "onLocationResult().")
+            Log.d(TAG, "locationCallback.onLocationResult().")
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
                 // The last location in the list is the newest.
                 val location = locationList.last()
                 goToLocation(location.latitude, location.longitude)
-//                parent.toast("Got Location: $location")
                 // TODO: Here I need to call method onLocationSelected()
                 onLocationSelected()
             }
@@ -186,60 +179,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         initMenus()
         checkLocationPermission()
 
-        binding.fab.visibility = View.GONE
-        /*
-        binding.fab.setOnClickListener {
-            if (!isGpsEnabled()) {
-                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            }
-        }
-         */
-
         return binding.root
-    }
-
-    //
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume().")
-        /*
-        checkUserDecision()
-        Log.d(TAG, "onResume() -> [1]")
-        if (parent.permissionGranted(FINE)) {
-            Log.d(TAG, "onResume() -> [2]")
-            if (parent.permissionGranted(BACK)) {
-                Log.d(TAG, "onResume() -> [3]")
-                lifecycleScope.launch {
-                    delay(3000)
-                    checkGpsEnabled()
-                }
-            } else {
-                Log.d(TAG, "onResume() -> [4]")
-                checkGpsEnabled()
-            }
-        } else {
-            Log.d(TAG, "onResume() -> [5]")
-            if (permissionAskedForUser) {
-                Log.d(TAG, "onResume() -> [6]")
-                permissionDeniedFeedback()
-            }
-        }
-         */
-    }
-
-    private fun checkUserDecision() {
-        val fine = parent.permissionGranted(FINE)
-        val back = parent.permissionGranted(BACK)
-        /*
-        val userDenies = grantResults[0] == PermissionChecker.PERMISSION_DENIED &&
-                grantResults[1] == PermissionChecker.PERMISSION_DENIED
-        val userAllowWhileUsing = grantResults[0] == PermissionChecker.PERMISSION_DENIED &&
-                grantResults[1] == PermissionChecker.PERMISSION_GRANTED
-        val userAllowAllTheTime = grantResults[0] == PermissionChecker.PERMISSION_GRANTED &&
-                grantResults[1] == PermissionChecker.PERMISSION_GRANTED
-         */
-        Log.d(TAG, "checkUserDecision() -> fine? $fine")
-        Log.d(TAG, "checkUserDecision() -> back? $back")
     }
 
     override fun onPause() {
@@ -249,28 +189,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             fusedLocationProvider?.removeLocationUpdates(locationCallback)
         }
     }
-
-    /*
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-    }
-    */
-
-    /*
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        Log.d(TAG, "onActivityResult().")
-        if (requestCode == GO_TO_SETTINGS) {
-            if (isGpsEnabled()) {
-                parent.toast(R.string.gps_enabled)
-                requestTracking()
-            } else {
-                permissionDeniedFeedback()
-            }
-        }
-    }
-     */
 
     override fun onDestroy() {
         super.onDestroy()
@@ -353,6 +271,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         when {
             parent.permissionGranted(FINE) -> {
                 // You can use the API that requires the permission.
+                Log.d(TAG, "checkLocationPermission() -> [1]")
                 checkBackgroundLocationPermission()
             }
             parent.showRequestPermissionRationale(FINE) -> {
@@ -372,7 +291,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .setMessage(message)
                     .setPositiveButton("OK") { _, _ ->
                         // Prompt the user once explanation has been shown.
-                        requestLocationPermission()
+                        requestFinePermissionLauncher.launch(FINE)
                     }
                     .create()
                     .show()
@@ -380,52 +299,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             else -> {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
+                Log.d(TAG, "checkLocationPermission() -> [3]")
                 requestFinePermissionLauncher.launch(FINE)
             }
         }
     }
 
-    /*
-    private fun checkLocationPermission() {
-        Log.d(TAG, "checkLocationPermission().")
-        if (!parent.permissionGranted(FINE)) {
-            Log.d(TAG, "checkLocationPermission() -> [1]")
-            // Should we show an explanation?
-            if (parent.showRequestPermissionRationale(FINE)) {
-                // Show an explanation to the user *asynchronously* -- don't block this thread
-                // waiting for the user's response! After the user sees the explanation, try again
-                // to request the permission.
-                Log.d(TAG, "checkLocationPermission() -> [2]")
-                val title = this.getString(R.string.location_permission_needed)
-                val message = this.getString(R.string.location_permission_explanation)
-                AlertDialog.Builder(parent)
-                    .setTitle(title)
-                    .setMessage(message)
-                    .setPositiveButton("OK") { _, _ ->
-                        // Prompt the user once explanation has been shown.
-                        requestLocationPermission()
-                    }
-                    .create()
-                    .show()
-            } else {
-                // No explanation needed, we can request the permission.
-                Log.d(TAG, "checkLocationPermission() -> [3]")
-                requestLocationPermission()
-            }
-        } else {
-            Log.d(TAG, "checkLocationPermission() -> [4]")
-            checkBackgroundLocationPermission()
-        }
-    }
-     */
-
     private fun checkBackgroundLocationPermission() {
-        Log.d(TAG, "checkBackgroundLocation().")
+        Log.d(TAG, "checkBackgroundLocationPermission().")
         when {
             parent.permissionGranted(BACK) -> {
                 // You can use the API that requires the permission.
                 lifecycleScope.launch {
-                    delay(3000)
+                    delay(2000)
                     checkGpsEnabled()
                 }
             }
@@ -435,28 +321,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 requestBackgroundLocationPermission()
             }
         }
-    }
-
-    /*
-    private fun checkBackgroundLocationPermission() {
-        Log.d(TAG, "checkBackgroundLocation().")
-        if (!parent.permissionGranted(BACK)) {
-            Log.d(TAG, "checkBackgroundLocation() -> [1]")
-            requestBackgroundLocationPermission()
-        } else {
-            Log.d(TAG, "checkBackgroundLocation() -> [2]")
-        }
-    }
-     */
-
-    private fun requestLocationPermission() {
-        Log.d(TAG, "+++++++++++++++ requestLocationPermission().")
-        permissionAskedForUser = true
-        requestFinePermissionLauncher.launch(FINE)
-//        parent.requestTrackingPermissions(
-//            arrayOf(FINE),
-//            MY_PERMISSIONS_REQUEST_LOCATION
-//        )
     }
 
     /**
@@ -471,23 +335,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * (in order to track the user GPS's location).
      */
     private fun requestBackgroundLocationPermission() {
-        Log.d(TAG, "+++++++++++++++ requestBackgroundLocationPermission().")
-        permissionAskedForUser = true
+        Log.d(TAG, "requestBackgroundLocationPermission().")
         val builder = AlertDialog.Builder(parent)
         builder.setMessage(R.string.please_accept_allow_all_time)
             .setCancelable(false)
             .setPositiveButton("Yes") { _, _ ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//                    parent.requestTrackingPermissions(
-//                        arrayOf(BACK),
-//                        MY_PERMISSIONS_REQUEST_BACKGROUND_LOCATION
-//                    )
                     requestBackPermissionLauncher.launch(BACK)
                 } else {
-//                    parent.requestTrackingPermissions(
-//                        arrayOf(FINE),
-//                        MY_PERMISSIONS_REQUEST_LOCATION
-//                    )
                     requestFinePermissionLauncher.launch(FINE)
                 }
             }
@@ -498,89 +353,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         alertPleaseAcceptAllowAllTime = builder.create()
         alertPleaseAcceptAllowAllTime?.show()
     }
-
-    /*
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-     */
-        /*
-        Log.d(TAG, "----- onRequestPermissionsResult().")
-        // https://stackoverflow.com/a/69135604/1354788
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
-                onRequestLocationPermissionsResult(grantResults)
-                return
-            }
-            MY_PERMISSIONS_REQUEST_BACKGROUND_LOCATION -> {
-                onRequestBackgroundLocationPermissionsResult(grantResults)
-                return
-            }
-        }
-    }
-    */
-
-    /*
-    private fun onRequestLocationPermissionsResult(grantResults: IntArray) {
-        // If request is cancelled, the result arrays are empty.
-        Log.d(TAG, "----- onRequestLocationPermissionsResult().")
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // Permission was granted, yay! Do the location-related task you need to do.
-            if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                Log.d(TAG, "onRequestLocationPermissionsResult() -> " +
-                    "if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))")
-                requestTrackingAndStartMap()
-                // Now check background location.
-                checkBackgroundLocationPermission()
-            }
-        } else {
-            Log.d(TAG, "onRequestLocationPermissionsResult() -> " +
-                "else OF if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))")
-            // Permission denied, boo! Disable the functionality that depends on this permission.
-            parent.toast("Permission denied")
-
-            // Check if we are in a state where the user has denied the permission and
-            // selected Don't ask again.
-            if (!parent.showRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                parent.toast("blaaaaaa")
-                /*
-                startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", parent.packageName, null),
-                    ),
-                )
-                 */
-            }
-        }
-    }
-     */
-
-    /*
-    private fun onRequestBackgroundLocationPermissionsResult(grantResults: IntArray) {
-        Log.d(TAG, "----- onRequestBackgroundLocationPermissionsResult().")
-        // If request is cancelled, the result arrays are empty.
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "onRequestBackgroundLocationPermissionsResult() -> " +
-                "if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)")
-            // Permission was granted, yay! Do the location-related task you need to do.
-            if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                Log.d(TAG, "onRequestBackgroundLocationPermissionsResult() -> " +
-                    "if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))")
-                requestTrackingAndStartMap()
-                parent.toast("Granted Background Location Permission")
-            }
-        } else {
-            Log.d(TAG, "onRequestBackgroundLocationPermissionsResult() -> " +
-                "else OF if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)" +
-                "... Permission denied")
-            // Permission denied, boo! Disable the functionality that depends on this permission.
-            parent.toast("Permission denied")
-        }
-    }
-     */
 
     //--------------------------------------------------
     // Maps Methods
@@ -605,7 +377,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         Log.d(TAG, "onMapReady().")
         map = googleMap
-//        requireActivity().toast(R.string.maps_success)
 
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
@@ -679,17 +450,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * https://stackoverflow.com/a/25175756/1354788
      */
     private fun checkGpsEnabled() {
-        Log.d(TAG, "checkGpsEnabled() -> checkedGpsBefore: $checkedGpsBefore")
-//        if (!checkedGpsBefore) {
-            if (!isGpsEnabled()) {
-                Log.d(TAG, "checkGpsEnabled() -> [1]")
-                buildAlertMessageNoGps()
-            } else {
-                Log.d(TAG, "checkGpsEnabled() -> [2]")
-                requestTracking()
-            }
-//        }
-        checkedGpsBefore = true
+        Log.d(TAG, "checkGpsEnabled().")
+        if (!isGpsEnabled()) {
+            Log.d(TAG, "checkGpsEnabled() -> [1]")
+            buildAlertMessageNoGps()
+        } else {
+            Log.d(TAG, "checkGpsEnabled() -> [2]")
+            requestTracking()
+        }
     }
 
     private fun isGpsEnabled(): Boolean {
@@ -726,6 +494,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun permissionDeniedFeedback() {
+        Log.d(TAG, "permissionDeniedFeedback().")
         parent.toast(R.string.allow_all_time_did_not_accepted)
         requireActivity().onBackPressedDispatcher.onBackPressed()
     }
