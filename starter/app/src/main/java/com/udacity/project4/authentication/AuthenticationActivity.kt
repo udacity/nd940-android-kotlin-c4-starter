@@ -35,16 +35,23 @@ class AuthenticationActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, layoutId)
         binding.authButton.text = getString(R.string.login)
 
-        AuthUI.getInstance().signOut(this)
+        // TODO: Line below was commented to avoid losing time Login In on Firebase
+        //  every time I test the app.
+//        AuthUI.getInstance().signOut(this)
     }
 
     override fun onResume() {
         super.onResume()
-        observeAuthenticationState()
+        // TODO: Line below was commented to avoid losing time Login In on Firebase
+        //  every time I test the app.
+//        observeAuthenticationState()
 
-        binding.authButton.setOnClickListener {
-            launchSignInFlow()
-        }
+        // TODO: Lines below were commented to avoid losing time Login In on Firebase
+        //  every time I test the app.
+//        binding.authButton.setOnClickListener {
+//            launchSignInFlow()
+//        }
+        startActivity(Intent(this, RemindersActivity::class.java))
     }
 
     /**
