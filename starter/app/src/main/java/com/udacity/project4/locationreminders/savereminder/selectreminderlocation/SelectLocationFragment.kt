@@ -21,6 +21,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
@@ -40,6 +41,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import com.udacity.project4.utils.setNavigationResult
 import com.udacity.project4.utils.showRequestPermissionRationale
 import com.udacity.project4.utils.toast
 import kotlinx.coroutines.delay
@@ -54,11 +56,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //--------------------------------------------------
 
     companion object {
-        private val TAG = SelectLocationFragment::class.java.simpleName
+        val TAG = SelectLocationFragment::class.java.simpleName
         private const val UPDATE_INTERVAL = (10 * 1000).toLong() // 10 secs
         private const val FASTEST_INTERVAL: Long = 2000 // 2 secs
         private const val FINE = Manifest.permission.ACCESS_FINE_LOCATION
         private const val BACK = Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        const val ARGUMENTS = "args"
     }
 
     // Use Koin to get the view model of the SaveReminder
@@ -93,8 +96,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 // The last location in the list is the newest.
                 val location = locationList.last()
                 goToLocation(location.latitude, location.longitude)
-                // TODO: Here I need to call method onLocationSelected()
-                onLocationSelected()
+
+                // Inform user to select a POI (Point of Interest)
+                parent.toast(R.string.select_poi)
             }
         }
     }
@@ -112,7 +116,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // permissions dialog. Save the return value, an instance of ActivityResultLauncher. You can use
     // either a val, as shown in this snippet, or a lateinit var in your onAttach() or onCreate()
     // method.
-    val requestFinePermissionLauncher = registerForActivityResult(
+    private val requestFinePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         Log.d(TAG, "requestFinePermissionLauncher() -> isGranted: $isGranted")
@@ -128,13 +132,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    val requestBackPermissionLauncher = registerForActivityResult(
+    private val requestBackPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         Log.d(TAG, "requestBackPermissionLauncher() -> isGranted: $isGranted")
         if (isGranted) {
             lifecycleScope.launch {
-                delay(3000)
+                delay(2000)
                 checkGpsEnabled()
             }
         } else {
@@ -146,7 +150,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * Source:
      * https://www.tothenew.com/blog/android-katha-onactivityresult-is-deprecated-now-what/
      */
-    var activityResultLauncher = registerForActivityResult(ActivityResultContracts
+    private var activityResultLauncher = registerForActivityResult(ActivityResultContracts
         .StartActivityForResult()) {
         Log.d(TAG, "activityResultLauncher().")
         if (isGpsEnabled()) {
@@ -357,7 +361,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //--------------------------------------------------
     // Maps Methods
     //--------------------------------------------------
-    //#region MapsMethods
 
     private fun startMapFeature() {
         Log.d(TAG, "startMapFeature().")
@@ -383,8 +386,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map?.let {
             it.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
             it.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-
-            setMapLongClick(it)
+//            setMapLongClick(it)
             // Put a marker to location that the user selected
             setPoiClick(it)
             // Add style to the map
@@ -392,8 +394,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    /*
     private fun setMapLongClick(map: GoogleMap) {
+        Log.d(TAG, "setMapLongClick().")
         map.setOnMapLongClickListener { latLng ->
+            Log.d(TAG, "setMapLongClick() -> map.setOnMapLongClickListener.")
             // A Snippet is Additional text that's displayed below the title.
             val snippet = String.format(
                 Locale.getDefault(),
@@ -409,8 +414,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .snippet(snippet)
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
+
+            onLocationSelected(
+                location = "",
+                latitude = latLng.latitude,
+                longitude = latLng.longitude
+            )
         }
     }
+     */
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
@@ -419,7 +431,31 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .position(poi.latLng)
                     .title(poi.name)
             )
-            poiMarker?.showInfoWindow()
+//            poiMarker?.showInfoWindow()
+
+            val latLng = poi.latLng
+            val poiLocation = poi.name
+
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude, latLng.longitude
+            )
+
+            map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+//                    .title(getString(R.string.dropped_pin))
+                    .title(poiLocation)
+                    .snippet(snippet)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+
+            onLocationSelected(
+                location = poiLocation,
+                latitude = latLng.latitude,
+                longitude = latLng.longitude
+            )
         }
     }
 
@@ -439,7 +475,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             Log.e(TAG, "Can't find style. Error: ", e)
         }
     }
-    //#endregion
 
     //--------------------------------------------------
     // Location Methods
@@ -509,9 +544,27 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         )
     }
 
-    private fun onLocationSelected() {
+    private fun onLocationSelected(location: String, latitude: Double, longitude: Double) {
+        Log.d(TAG, "onLocationSelected() -> location: $location, latitude: $latitude, longitude: $longitude")
         // TODO: When the user confirms on the selected location, send back the selected location
         //  details to the view model and navigate back to the previous fragment to save the
         //  reminder and add the geofence.
+        parent.toast(R.string.poi_selected)
+        lifecycleScope.launch {
+            delay(2000)
+            val triple = Triple(location, latitude, longitude)
+            setNavigationResult(triple, ARGUMENTS)
+            findNavController().popBackStack()
+        }
+
+        /*
+        // Use the navigationCommand live data to navigate between the fragments
+        _viewModel.navigationCommand.postValue(
+            NavigationCommand.To(
+                SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment(
+                )
+            )
+        )
+         */
     }
 }

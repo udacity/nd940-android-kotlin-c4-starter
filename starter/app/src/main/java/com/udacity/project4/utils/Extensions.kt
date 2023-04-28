@@ -1,12 +1,9 @@
 package com.udacity.project4.utils
 
-import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,10 +11,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.location.GeofenceStatusCodes
+import com.udacity.project4.R
 import com.udacity.project4.base.BaseRecyclerViewAdapter
-import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment
 
 /**
  * Extension function to setup the RecyclerView.
@@ -71,7 +70,7 @@ fun View.fadeOut() {
 }
 
 fun Context.toast(textId: Int) {
-    Toast.makeText(this, textId, Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, textId, Toast.LENGTH_LONG).show()
 }
 
 fun Context.toast(text: String) {
@@ -97,3 +96,33 @@ fun FragmentActivity.showRequestPermissionRationale(permission: String): Boolean
         this,
         permission
     )
+
+/**
+ * Source:
+ * https://stackoverflow.com/a/60757744/1354788
+ */
+fun Fragment.setNavigationResult(result: Any, key: String = "key") {
+    this.findNavController().previousBackStackEntry?.savedStateHandle?.set(key, result)
+}
+
+fun Fragment.getNavigationResult(key: String = "key") =
+    findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Any>(key)
+
+/**
+ * Returns the error string for a geofencing error code.
+ */
+fun errorMessage(context: Context, errorCode: Int): String {
+    val resources = context.resources
+    return when (errorCode) {
+        GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> resources.getString(
+            R.string.geofence_not_available
+        )
+        GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES -> resources.getString(
+            R.string.geofence_too_many_geofences
+        )
+        GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS -> resources.getString(
+            R.string.geofence_too_many_pending_intents
+        )
+        else -> resources.getString(R.string.unknown_geofence_error)
+    }
+}

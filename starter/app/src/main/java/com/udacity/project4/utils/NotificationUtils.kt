@@ -15,8 +15,7 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 private const val NOTIFICATION_CHANNEL_ID = BuildConfig.APPLICATION_ID + ".channel"
 
 fun sendNotification(context: Context, reminderDataItem: ReminderDataItem) {
-    val notificationManager = context
-        .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     // We need to create a NotificationChannel associated with our CHANNEL_ID before sending a notification.
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
