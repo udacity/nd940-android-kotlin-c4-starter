@@ -39,6 +39,7 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setNavigationResult
@@ -56,7 +57,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //--------------------------------------------------
 
     companion object {
-        val TAG = SelectLocationFragment::class.java.simpleName
         private const val UPDATE_INTERVAL = (10 * 1000).toLong() // 10 secs
         private const val FASTEST_INTERVAL: Long = 2000 // 2 secs
         private const val FINE = Manifest.permission.ACCESS_FINE_LOCATION
@@ -90,7 +90,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private var locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            Log.d(TAG, "locationCallback.onLocationResult().")
+            Log.d(TAG, "SelectLocationFragment.locationCallback.onLocationResult().")
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
                 // The last location in the list is the newest.
@@ -119,7 +119,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val requestFinePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        Log.d(TAG, "requestFinePermissionLauncher() -> isGranted: $isGranted")
+        Log.d(TAG, "SelectLocationFragment.requestFinePermissionLauncher() -> isGranted: $isGranted")
         if (isGranted) {
             // Permission is granted. Continue the action or workflow in your app.
             checkBackgroundLocationPermission()
@@ -135,7 +135,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val requestBackPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        Log.d(TAG, "requestBackPermissionLauncher() -> isGranted: $isGranted")
+        Log.d(TAG, "SelectLocationFragment.requestBackPermissionLauncher() -> isGranted: $isGranted")
         if (isGranted) {
             lifecycleScope.launch {
                 delay(2000)
@@ -152,7 +152,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      */
     private var activityResultLauncher = registerForActivityResult(ActivityResultContracts
         .StartActivityForResult()) {
-        Log.d(TAG, "activityResultLauncher().")
+        Log.d(TAG, "SelectLocationFragment.activityResultLauncher.")
         if (isGpsEnabled()) {
             parent.toast(R.string.gps_enabled)
             requestTracking()
@@ -188,7 +188,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "onPause().")
+        Log.d(TAG, "SelectLocationFragment.onPause().")
         if (parent.permissionGranted(FINE)) {
             fusedLocationProvider?.removeLocationUpdates(locationCallback)
         }
@@ -196,7 +196,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy().")
+        Log.d(TAG, "SelectLocationFragment.onDestroy().")
         disableDialogs()
     }
 
@@ -271,11 +271,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //--------------------------------------------------
 
     private fun checkLocationPermission() {
-        Log.d(TAG, "checkLocationPermission().")
+        Log.d(TAG, "SelectLocationFragment.checkLocationPermission().")
         when {
             parent.permissionGranted(FINE) -> {
                 // You can use the API that requires the permission.
-                Log.d(TAG, "checkLocationPermission() -> [1]")
+                Log.d(TAG, "SelectLocationFragment.checkLocationPermission() -> [1]")
                 checkBackgroundLocationPermission()
             }
             parent.showRequestPermissionRationale(FINE) -> {
@@ -287,7 +287,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 // Show an explanation to the user *asynchronously* -- don't block this thread
                 // waiting for the user's response! After the user sees the explanation, try again
                 // to request the permission.
-                Log.d(TAG, "checkLocationPermission() -> [2]")
+                Log.d(TAG, "SelectLocationFragment.checkLocationPermission() -> [2]")
                 val title = this.getString(R.string.location_permission_needed)
                 val message = this.getString(R.string.location_permission_explanation)
                 AlertDialog.Builder(parent)
@@ -303,14 +303,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             else -> {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
-                Log.d(TAG, "checkLocationPermission() -> [3]")
+                Log.d(TAG, "SelectLocationFragment.checkLocationPermission() -> [3]")
                 requestFinePermissionLauncher.launch(FINE)
             }
         }
     }
 
     private fun checkBackgroundLocationPermission() {
-        Log.d(TAG, "checkBackgroundLocationPermission().")
+        Log.d(TAG, "SelectLocationFragment.checkBackgroundLocationPermission().")
         when {
             parent.permissionGranted(BACK) -> {
                 // You can use the API that requires the permission.
@@ -339,7 +339,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * (in order to track the user GPS's location).
      */
     private fun requestBackgroundLocationPermission() {
-        Log.d(TAG, "requestBackgroundLocationPermission().")
+        Log.d(TAG, "SelectLocationFragment.requestBackgroundLocationPermission().")
         val builder = AlertDialog.Builder(parent)
         builder.setMessage(R.string.please_accept_allow_all_time)
             .setCancelable(false)
@@ -363,7 +363,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     //--------------------------------------------------
 
     private fun startMapFeature() {
-        Log.d(TAG, "startMapFeature().")
+        Log.d(TAG, "SelectLocationFragment.startMapFeature().")
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -378,7 +378,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        Log.d(TAG, "onMapReady().")
+        Log.d(TAG, "SelectLocationFragment.onMapReady().")
         map = googleMap
 
         // Add a marker in Sydney and move the camera
@@ -485,24 +485,24 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * https://stackoverflow.com/a/25175756/1354788
      */
     private fun checkGpsEnabled() {
-        Log.d(TAG, "checkGpsEnabled().")
+        Log.d(TAG, "SelectLocationFragment.checkGpsEnabled().")
         if (!isGpsEnabled()) {
-            Log.d(TAG, "checkGpsEnabled() -> [1]")
+            Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [1]")
             buildAlertMessageNoGps()
         } else {
-            Log.d(TAG, "checkGpsEnabled() -> [2]")
+            Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [2]")
             requestTracking()
         }
     }
 
     private fun isGpsEnabled(): Boolean {
-        Log.d(TAG, "isGpsEnabled().")
+        Log.d(TAG, "SelectLocationFragment.isGpsEnabled().")
         val manager = parent.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return manager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
     private fun buildAlertMessageNoGps() {
-        Log.d(TAG, "buildAlertMessageNoGps().")
+        Log.d(TAG, "SelectLocationFragment.buildAlertMessageNoGps().")
         val builder = AlertDialog.Builder(parent)
         builder.setMessage(R.string.should_enable_gps)
             .setCancelable(false)
@@ -518,7 +518,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun goToLocation(lat: Double, lng: Double) {
-        Log.d(TAG, "goToLocation().")
+        Log.d(TAG, "SelectLocationFragment.goToLocation().")
         map?.let {
             val latLng = LatLng(lat, lng)
             // Zoom to the user location after taking his permission.
@@ -529,14 +529,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun permissionDeniedFeedback() {
-        Log.d(TAG, "permissionDeniedFeedback().")
+        Log.d(TAG, "SelectLocationFragment.permissionDeniedFeedback().")
         parent.toast(R.string.allow_all_time_did_not_accepted)
         requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
     @SuppressLint("MissingPermission")
     private fun requestTracking() {
-        Log.d(TAG, "requestTracking().")
+        Log.d(TAG, "SelectLocationFragment.requestTracking().")
         fusedLocationProvider?.requestLocationUpdates(
             locationRequest,
             locationCallback,
@@ -545,7 +545,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun onLocationSelected(location: String, latitude: Double, longitude: Double) {
-        Log.d(TAG, "onLocationSelected() -> location: $location, latitude: $latitude, longitude: $longitude")
+        Log.d(TAG, "SelectLocationFragment.onLocationSelected() -> " +
+            "location: $location, latitude: $latitude, longitude: $longitude")
         // TODO: When the user confirms on the selected location, send back the selected location
         //  details to the view model and navigate back to the previous fragment to save the
         //  reminder and add the geofence.

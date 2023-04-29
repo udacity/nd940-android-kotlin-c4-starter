@@ -28,6 +28,7 @@ class AuthenticationActivity : AppCompatActivity() {
     // Get a reference to the ViewModel scoped to this Fragment
     private val viewModel by viewModels<LoginViewModel>()
     private lateinit var binding: ActivityAuthenticationBinding
+    private var fakeLogin = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +52,10 @@ class AuthenticationActivity : AppCompatActivity() {
 //        binding.authButton.setOnClickListener {
 //            launchSignInFlow()
 //        }
-        startActivity(Intent(this, RemindersActivity::class.java))
+        if (fakeLogin) {
+            fakeLogin = false
+            startActivity(Intent(this, RemindersActivity::class.java))
+        }
     }
 
     /**

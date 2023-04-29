@@ -1,10 +1,7 @@
 package com.udacity.project4.locationreminders
 
 import android.os.Bundle
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.fragment.NavHostFragment
-import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.databinding.ActivityRemindersBinding
 
 /**

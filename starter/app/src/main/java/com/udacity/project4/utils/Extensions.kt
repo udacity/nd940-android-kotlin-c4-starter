@@ -15,8 +15,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.GeofenceStatusCodes
+import com.google.android.gms.maps.model.LatLng
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseRecyclerViewAdapter
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+
+const val TAG = "Project4"
 
 /**
  * Extension function to setup the RecyclerView.
@@ -126,3 +130,15 @@ fun errorMessage(context: Context, errorCode: Int): String {
         else -> resources.getString(R.string.unknown_geofence_error)
     }
 }
+
+fun getFakeReminderItem() : ReminderDataItem {
+    return ReminderDataItem(
+        title = "some title",
+        description = "some description",
+        location = "some location",
+        latitude = -34.0, // Sydney, Australia
+        longitude = 151.0 // Sydney, Australia
+    )
+}
+
+data class LandmarkDataObject(val id: String, val latLong: LatLng)
