@@ -74,6 +74,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var parent: FragmentActivity
 
+    private lateinit var latLng : LatLng
+    private var poiLocation = ""
+
     //--------------------------------------------------
     // GPS Location Attributes
     //--------------------------------------------------
@@ -173,6 +176,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         binding.viewModel = _viewModel
         binding.lifecycleOwner = this
+        init()
+
+        return binding.root
+    }
+
+    private fun init() {
         parent = requireActivity()
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressHandler)
 
@@ -183,7 +192,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         initMenus()
         checkLocationPermission()
 
-        return binding.root
+        binding.saveButton.setOnClickListener {
+            onLocationSelected(
+                location = poiLocation,
+                latitude = latLng.latitude,
+                longitude = latLng.longitude
+            )
+        }
     }
 
     override fun onPause() {
@@ -433,8 +448,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
 //            poiMarker?.showInfoWindow()
 
-            val latLng = poi.latLng
-            val poiLocation = poi.name
+            latLng = poi.latLng
+            poiLocation = poi.name
 
             val snippet = String.format(
                 Locale.getDefault(),
@@ -451,11 +466,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
 
-            onLocationSelected(
-                location = poiLocation,
-                latitude = latLng.latitude,
-                longitude = latLng.longitude
-            )
+            binding.saveButton.visibility = View.VISIBLE
         }
     }
 
@@ -544,12 +555,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         )
     }
 
+    /**
+     * When the user confirms on the selected location, send back the selected location details
+     * to the view model and navigate back to the previous fragment to save the reminder and add
+     * the geofence.
+     */
     private fun onLocationSelected(location: String, latitude: Double, longitude: Double) {
         Log.d(TAG, "SelectLocationFragment.onLocationSelected() -> " +
             "location: $location, latitude: $latitude, longitude: $longitude")
-        // TODO: When the user confirms on the selected location, send back the selected location
-        //  details to the view model and navigate back to the previous fragment to save the
-        //  reminder and add the geofence.
+
         parent.toast(R.string.poi_selected)
         lifecycleScope.launch {
             delay(2000)
