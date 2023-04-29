@@ -6,7 +6,6 @@ import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.udacity.project4.base.BaseRecyclerViewAdapter
 
-
 object BindingAdapters {
 
     /**

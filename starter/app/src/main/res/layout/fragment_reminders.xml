@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="viewModel"
             type="com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel" />
@@ -17,6 +16,7 @@
         tools:context=".locationreminders.reminderslist.ReminderListFragment">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/parent_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/white">

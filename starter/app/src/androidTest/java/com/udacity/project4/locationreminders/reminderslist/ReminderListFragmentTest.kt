@@ -21,11 +21,11 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
-//UI Testing
+// UI Testing
 @MediumTest
 class ReminderListFragmentTest {
 
-//    TODO: test the navigation of the fragments.
-//    TODO: test the displayed data on the UI.
-//    TODO: add testing for the error messages.
+    // TODO: Test the navigation of the fragments.
+    // TODO: Test the displayed data on the UI.
+    // TODO: Add testing for the error messages.
 }

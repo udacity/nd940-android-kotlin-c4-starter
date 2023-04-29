@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 
 /**
@@ -12,6 +11,7 @@ import com.udacity.project4.locationreminders.data.dto.ReminderDTO
  */
 @Dao
 interface RemindersDao {
+
     /**
      * @return all reminders.
      */
@@ -27,7 +27,6 @@ interface RemindersDao {
 
     /**
      * Insert a reminder in the database. If the reminder already exists, replace it.
-     *
      * @param reminder the reminder to be inserted.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -38,5 +37,4 @@ interface RemindersDao {
      */
     @Query("DELETE FROM reminders")
     suspend fun deleteAllReminders()
-
 }
