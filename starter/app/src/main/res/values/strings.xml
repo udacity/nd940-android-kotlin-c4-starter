@@ -53,6 +53,14 @@
     <string name="no_notification_permission">Since the Notification permission was denied, the app will logout you from the system.</string>
     <string name="notification_permission_granted">Notification permission granted!</string>
 
+    <!-- Reminder Details -->
+
+    <string name="reminder_details__title">Title:</string>
+    <string name="reminder_details__description">Description:</string>
+    <string name="reminder_details__location">Location:</string>
+    <string name="reminder_details__latitude">Latitude:</string>
+    <string name="reminder_details__longitude">Longitude:</string>
+
     <!-- Error strings -->
 
     <string name="geofence_unknown_error">Unknown error: the Geofence service is not available now.</string>

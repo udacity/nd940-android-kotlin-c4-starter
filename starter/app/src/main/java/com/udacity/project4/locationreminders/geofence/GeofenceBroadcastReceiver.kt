@@ -4,16 +4,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import android.widget.Toast
+import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkManager
+import com.google.gson.Gson
 import com.udacity.project4.MyApp
-import com.udacity.project4.R
-import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment.Companion.ACTION_GEOFENCE_EVENT
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment.Companion.GEO_FENCE_ID
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment.Companion.GEO_FENCE_LAT
-import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment.Companion.GEO_FENCE_LNG
 import com.udacity.project4.utils.TAG
-import com.udacity.project4.utils.sendNotification
 
 /**
  * Triggered by the Geofence. Since we can have many GeoFences at once, we pull the request
@@ -24,29 +19,52 @@ import com.udacity.project4.utils.sendNotification
  * To do that you can use:
  * https://developer.android.com/reference/android/support/v4/app/JobIntentService to do that.
  */
+/*
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
 	override fun onReceive(context: Context, intent: Intent) {
 		Log.d(TAG, "GeofenceBroadcastReceiver.onReceive().")
 		if (intent.action == ACTION_GEOFENCE_EVENT) {
-			val extras = intent.extras
-			var id = ""
-			var lat = 0.0
-			var lng = 0.0
-			if (extras != null) {
-				id = extras.getString(GEO_FENCE_ID).toString()
-				lat = extras.getDouble(GEO_FENCE_LAT)
-				lng = extras.getDouble(GEO_FENCE_LNG)
+			Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [1]")
+			val geofencingEvent = GeofencingEvent.fromIntent(intent)
+			if (geofencingEvent != null) {
+				Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [2]")
+				if (geofencingEvent.hasError()) {
+					Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [3]")
+					val errorMessage = errorMessage(context, geofencingEvent.errorCode)
+					Log.e(TAG, "GeofenceBroadcast().onReceive() -> $errorMessage")
+					return
+				} else {
+					Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [4]")
+					val extras = intent.extras
+					var id = ""
+					var lat = 0.0
+					var lng = 0.0
+					if (extras != null) {
+						Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [5]")
+						id = extras.getString(GEO_FENCE_ID).toString()
+						lat = extras.getDouble(GEO_FENCE_LAT)
+						lng = extras.getDouble(GEO_FENCE_LNG)
+					} else {
+						Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [6]")
+					}
+					Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [7]")
+					callNotification(
+						context,
+						ReminderDataItem(
+							title = id,
+							description = id,
+							location = id,
+							latitude = lat,
+							longitude = lng
+						)
+					)
+				}
+			} else {
+				Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [8]")
 			}
-			callNotification(context,
-				ReminderDataItem(
-					title = id,
-					description = id,
-					location = id,
-					latitude = lat,
-					longitude = lng
-				)
-			)
+		} else {
+			Log.d(TAG, "GeofenceBroadcastReceiver.onReceive() -> [9]")
 		}
 	}
 
@@ -60,3 +78,22 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 		}
 	}
 }
+ */
+
+//
+class GeofenceBroadcastReceiver : BroadcastReceiver() {
+	override fun onReceive(context: Context, intent: Intent) {
+		Log.d(TAG, "GeofenceBroadcastReceiver.onReceive().")
+//		GeofenceTransitionsJobIntentService.enqueueWork(context, intent)
+		(context.applicationContext as MyApp).broadcastIntent = intent
+		val workManager = WorkManager.getInstance(context)
+		val intentToBundle = Gson().toJson(intent)
+		val exampleWorkRequest = GeofenceTransitionsWorkManager.buildWorkRequest(intentToBundle)
+		workManager.enqueueUniqueWork(
+			UNIQUE_WORK_NAME,
+			ExistingWorkPolicy.KEEP,
+			exampleWorkRequest
+		)
+	}
+}
+ //

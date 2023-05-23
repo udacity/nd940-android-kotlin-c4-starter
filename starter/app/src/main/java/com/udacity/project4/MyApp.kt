@@ -1,6 +1,7 @@
 package com.udacity.project4
 
 import android.app.Application
+import android.content.Intent
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
@@ -13,6 +14,8 @@ import org.koin.dsl.module
 
 class MyApp : Application() {
 	var hasNotificationPermission = true
+	lateinit var broadcastIntent: Intent
+
 	override fun onCreate() {
 		super.onCreate()
 

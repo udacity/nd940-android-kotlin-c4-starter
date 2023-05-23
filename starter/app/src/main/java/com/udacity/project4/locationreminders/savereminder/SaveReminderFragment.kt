@@ -69,7 +69,8 @@ class SaveReminderFragment : BaseFragment() {
         // addGeoFences() and removeGeoFences().
         var intentFlagTypeUpdateCurrent = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            intentFlagTypeUpdateCurrent = PendingIntent.FLAG_IMMUTABLE
+            // Source: https://stackoverflow.com/a/74174664/1354788
+            intentFlagTypeUpdateCurrent = PendingIntent.FLAG_MUTABLE
         }
         PendingIntent.getBroadcast(requireContext(), 0, intent, intentFlagTypeUpdateCurrent)
     }

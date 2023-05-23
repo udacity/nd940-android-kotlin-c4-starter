@@ -44,6 +44,8 @@ buildscript {
         playServicesMapsVersion = '18.1.0'
         firebaseUiAuthVersion = '8.0.2'
         firebaseAuthKtxVersion = '21.2.0'
+        workManagerVersion = '2.8.1'
+        gsonVersion = '2.9.0'
     }
 
     repositories {
