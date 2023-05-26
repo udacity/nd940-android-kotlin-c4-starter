@@ -16,8 +16,6 @@
         android:orientation="vertical"
         tools:context=".locationreminders.ReminderDescriptionActivity">
 
-        <!-- TODO: Added the design of the reminder details -->
-
         <TextView
             style="@style/ReminderDetails_Text_View"
             android:text="@string/reminder_details__title"
