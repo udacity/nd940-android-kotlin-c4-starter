@@ -82,7 +82,6 @@ dependencies {
     implementation "io.insert-koin:koin-core:$koinVersion"
 
     // Dependencies for local unit tests
-    testImplementation "junit:junit:$junitVersion"
 //    testImplementation "org.hamcrest:hamcrest-all:$hamcrestVersion"
     testImplementation "androidx.arch.core:core-testing:$archTestingVersion"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
@@ -92,9 +91,11 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$mockitoVersion"
 
     // AndroidX Test - JVM testing
+    testImplementation "junit:junit:$junitVersion"
     testImplementation "androidx.test:core-ktx:$androidXTestCoreVersion"
     testImplementation "androidx.test.ext:junit-ktx:$androidXTestExtKotlinRunnerVersion"
     testImplementation "androidx.test:rules:$androidXTestRulesVersion"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion"
 
     // AndroidX Test - Instrumented testing
     androidTestImplementation "androidx.test:core-ktx:$androidXTestCoreVersion"

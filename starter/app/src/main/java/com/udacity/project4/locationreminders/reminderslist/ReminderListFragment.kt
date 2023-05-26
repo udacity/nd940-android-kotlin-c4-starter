@@ -139,10 +139,7 @@ class ReminderListFragment : BaseFragment() {
             parent.permissionGranted(POST) -> {
                 // You can use the API that requires the permission.
                 Log.d(TAG, "ReminderListFragment.requestPermissionListener() -> Permission granted!")
-//                sendNotification(parent, getFakeReminderItem())
             }
-//            shouldShowRequestPermissionRationale(POST) -> {
-//            }
             else -> {
                 // The registered ActivityResultCallback gets the result of this request.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -31,7 +31,7 @@ buildscript {
         truthVersion = '1.1.3'
         junitVersion = '4.13.2'
         androidXTestCoreVersion = '1.5.0'
-        robolectricVersion = '4.3.1'
+        robolectricVersion = '4.10.3'
         androidXTestExtKotlinRunnerVersion = '1.1.5'
         archTestingVersion = '2.2.0'
 //        playServicesVersion = '17.0.0'
