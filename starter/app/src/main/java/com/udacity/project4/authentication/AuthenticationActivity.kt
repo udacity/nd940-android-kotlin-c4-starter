@@ -28,7 +28,6 @@ class AuthenticationActivity : AppCompatActivity() {
     // Get a reference to the ViewModel scoped to this Fragment
     private val viewModel by viewModels<LoginViewModel>()
     private lateinit var binding: ActivityAuthenticationBinding
-    private var fakeLogin = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,25 +35,15 @@ class AuthenticationActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, layoutId)
         binding.authButton.text = getString(R.string.login)
 
-        // TODO: Line below was commented to avoid losing time Login In on Firebase
-        //  every time I test the app.
-//        AuthUI.getInstance().signOut(this)
+        AuthUI.getInstance().signOut(this)
     }
 
     override fun onResume() {
         super.onResume()
-        // TODO: Line below was commented to avoid losing time Login In on Firebase
-        //  every time I test the app.
-//        observeAuthenticationState()
+        observeAuthenticationState()
 
-        // TODO: Lines below were commented to avoid losing time Login In on Firebase
-        //  every time I test the app.
-//        binding.authButton.setOnClickListener {
-//            launchSignInFlow()
-//        }
-        if (fakeLogin) {
-            fakeLogin = false
-            startActivity(Intent(this, RemindersActivity::class.java))
+        binding.authButton.setOnClickListener {
+            launchSignInFlow()
         }
     }
 

@@ -33,9 +33,11 @@ import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.get
 
+/**
+ * END TO END test to black box test the app.
+ */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-//END TO END test to black box test the app
 // Extended Koin Test - embed autoclose @After method to close Koin after every test
 class RemindersActivityTest : KoinTest {
 
@@ -95,8 +97,6 @@ class RemindersActivityTest : KoinTest {
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
         IdlingRegistry.getInstance().unregister(dataBindingIdlingResource)
     }
-
-    // TODO: Adding End to End testing to the app
 
     @Test
     fun clickingOnFloatingActionButton() = runBlocking {

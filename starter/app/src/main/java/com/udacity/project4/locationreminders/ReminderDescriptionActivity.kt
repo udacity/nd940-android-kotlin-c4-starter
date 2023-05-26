@@ -53,7 +53,6 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         val layoutId = R.layout.activity_reminder_description
         binding = DataBindingUtil.setContentView(this, layoutId)
 
-        // TODO: Added the implementation of the reminder details.
         binding.title.text = reminderTitle
         binding.description.text = description
         binding.location.text = location
