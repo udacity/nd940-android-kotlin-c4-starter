@@ -20,7 +20,7 @@ class FakeDataSource(private var reminderList: MutableList<ReminderDTO>? = mutab
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
         // Confirm the correct behavior when the reminders list for some reason can't be loaded
-        return if (shouldReturnError){
+        return if (shouldReturnError) {
             Result.Error("No Reminders found")
         } else {
             Result.Success(ArrayList(reminderList))
@@ -31,19 +31,18 @@ class FakeDataSource(private var reminderList: MutableList<ReminderDTO>? = mutab
         reminderList?.add(reminder)
     }
 
-
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
         // Confirm the correct behavior when the reminders list for some reason can't be loaded.
-        if (shouldReturnError){
+        if (shouldReturnError) {
             return Result.Error("No Reminders found")
         }
         // Return the reminder with the id
         val reminder = reminderList?.find {
             it.id == id
         }
-        return if (reminder!=null){
+        return if (reminder != null) {
             Result.Success(reminder)
-        } else{
+        } else {
             Result.Error("No Reminders found")
         }
     }

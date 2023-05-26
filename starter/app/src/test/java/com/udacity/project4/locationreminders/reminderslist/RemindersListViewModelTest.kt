@@ -121,7 +121,7 @@ class RemindersListViewModelTest {
 	 */
 	@Test
 	fun loadRemindersCheckLoading() = runBlocking {
-		// Set Main dispatcher to not run coroutines eagerly, for just this one test
+		// Set Main dispatcher to not run coroutines eagerly, for just this one test.
 		val dispatcher = StandardTestDispatcher()
 		Dispatchers.setMain(dispatcher)
 
@@ -147,7 +147,7 @@ class RemindersListViewModelTest {
 	}
 
 	/**
-	 * Testing showing an Error
+	 * Testing showing an Error.
 	 */
 	@Test
 	fun loadRemindersShouldReturnError() = runBlocking {
