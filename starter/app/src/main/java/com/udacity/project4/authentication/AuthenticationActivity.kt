@@ -35,7 +35,7 @@ class AuthenticationActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, layoutId)
         binding.authButton.text = getString(R.string.login)
 
-        AuthUI.getInstance().signOut(this)
+        checkIfUserIsLogged()
     }
 
     override fun onResume() {
@@ -124,5 +124,18 @@ class AuthenticationActivity : AppCompatActivity() {
             .setAvailableProviders(providers)
             .build()
         resultLauncher.launch(intent)
+    }
+
+    private fun checkIfUserIsLogged() {
+        if (!userIsLoggedIn()) {
+            AuthUI.getInstance().signOut(this)
+        } else {
+            startActivity(Intent(this, RemindersActivity::class.java))
+        }
+    }
+
+    private fun userIsLoggedIn(): Boolean {
+        val user = FirebaseAuth.getInstance().currentUser
+        return user != null
     }
 }
