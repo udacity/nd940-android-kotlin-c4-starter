@@ -14,9 +14,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.maps.model.LatLng
-import com.udacity.project4.R
 import com.udacity.project4.base.BaseRecyclerViewAdapter
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
@@ -111,25 +109,6 @@ fun Fragment.setNavigationResult(result: Any, key: String = "key") {
 
 fun Fragment.getNavigationResult(key: String = "key") =
     findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Any>(key)
-
-/**
- * Returns the error string for a geofencing error code.
- */
-fun errorMessage(context: Context, errorCode: Int): String {
-    val resources = context.resources
-    return when (errorCode) {
-        GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> resources.getString(
-            R.string.geofence_not_available
-        )
-        GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES -> resources.getString(
-            R.string.geofence_too_many_geofences
-        )
-        GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS -> resources.getString(
-            R.string.geofence_too_many_pending_intents
-        )
-        else -> resources.getString(R.string.unknown_geofence_error)
-    }
-}
 
 fun getFakeReminderItem() : ReminderDataItem {
     return ReminderDataItem(

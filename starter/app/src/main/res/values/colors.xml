@@ -5,4 +5,7 @@
     <color name="colorAccent">#D81B60</color>
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
+
+    <color name="geofencing_circle_fill_color">#CCFFF2CC</color>
+    <color name="geofencing_circle_stroke_color">#D6B656</color>
 </resources>

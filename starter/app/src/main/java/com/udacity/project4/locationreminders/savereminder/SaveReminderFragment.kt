@@ -31,6 +31,8 @@ import com.udacity.project4.databinding.FragmentSaveReminderBinding
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment.Companion.ARGUMENTS
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_EXPIRATION_IN_MILLISECONDS
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.LandmarkDataObject
 import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.getNavigationResult
@@ -44,8 +46,6 @@ class SaveReminderFragment : BaseFragment() {
 
     companion object {
         internal const val ACTION_GEOFENCE_EVENT = "SaveReminderFragment.ACTION_GEOFENCE_EVENT"
-        const val GEOFENCE_RADIUS_IN_METERS = 100f
-        val GEOFENCE_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
         const val GEO_FENCE_ID = "id"
         const val GEO_FENCE_LAT = "lat"
         const val GEO_FENCE_LNG = "lng"
@@ -117,6 +117,7 @@ class SaveReminderFragment : BaseFragment() {
 
         binding.lifecycleOwner = this
         binding.selectLocation.setOnClickListener {
+            Log.d(TAG, "SaveReminderFragment.onViewCreated() -> binding.selectLocation.setOnClickListener")
             // Navigate to another fragment to get the user location
             val directions = SaveReminderFragmentDirections
                 .actionSaveReminderFragmentToSelectLocationFragment()
@@ -127,7 +128,7 @@ class SaveReminderFragment : BaseFragment() {
         //  1) Add a geofencing request.
         //  2) Save the reminder to the local db.
         binding.saveReminder.setOnClickListener {
-            Log.d(TAG, "SaveReminderFragment.onViewCreated() -> saveReminder.setOnClickListener.")
+            Log.d(TAG, "SaveReminderFragment.onViewCreated() -> binding.saveReminder.setOnClickListener.")
             val location = _viewModel.reminderSelectedLocationStr.value
             val lat = _viewModel.latitude.value
             val lng = _viewModel.longitude.value

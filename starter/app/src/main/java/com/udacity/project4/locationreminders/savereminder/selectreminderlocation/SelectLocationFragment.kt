@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.location.Address
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -12,9 +14,12 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
@@ -39,16 +44,23 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setNavigationResult
 import com.udacity.project4.utils.showRequestPermissionRationale
 import com.udacity.project4.utils.toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import java.io.IOException
 import java.util.*
+
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -67,6 +79,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private var map: GoogleMap? = null
+    private var currentMarker: Marker? = null
+    private var currentCircleMarker: Circle? = null
+    private var currentPOI: PointOfInterest? = null
+    private lateinit var poiLatLng : LatLng
 
     private var alertPleaseAcceptAllowAllTime: AlertDialog? = null
     private var alertShouldEnableGps: AlertDialog? = null
@@ -74,7 +90,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var parent: FragmentActivity
 
-    private lateinit var latLng : LatLng
     private var poiLocation = ""
 
     //--------------------------------------------------
@@ -193,10 +208,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         checkLocationPermission()
 
         binding.saveButton.setOnClickListener {
+            Log.d(TAG, "+++++++++++++++ SelectLocationFragment.init() -> poiLatLng: $poiLatLng")
+            Log.d(TAG, "+++++++++++++++ SelectLocationFragment.init() -> poiLocation: $poiLocation")
+
             onLocationSelected(
                 location = poiLocation,
-                latitude = latLng.latitude,
-                longitude = latLng.longitude
+                latitude = poiLatLng.latitude,
+                longitude = poiLatLng.longitude
             )
         }
     }
@@ -237,6 +255,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         addMenu(menuHost)
     }
 
+    @Suppress("UNUSED_EXPRESSION")
     private fun addMenu(menuHost: MenuHost) {
         // Add menu items without using the Fragment Menu APIs. Note how we can tie the
         // MenuProvider to the viewLifecycleOwner and an optional Lifecycle.State (here, RESUMED)
@@ -245,6 +264,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.map_options, menu)
             }
+
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 when (menuItem.itemId) {
                     R.id.normal_map -> {
@@ -380,7 +400,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun startMapFeature() {
         Log.d(TAG, "SelectLocationFragment.startMapFeature().")
         val mapFragment = childFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+            .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
@@ -402,6 +422,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             it.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
             it.moveCamera(CameraUpdateFactory.newLatLng(sydney))
 //            setMapLongClick(it)
+            setMapClick(it)
             // Put a marker to location that the user selected
             setPoiClick(it)
             // Add style to the map
@@ -439,13 +460,134 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
      */
 
+    private fun setMapClick(map: GoogleMap?) {
+        Log.d(TAG, "SelectLocationFragment.setMapClick().")
+        map?.setOnMapClickListener { latLng ->
+            val geocoder = Geocoder(requireContext(), Locale.getDefault())
+            fetchGeocode(geocoder, latLng)
+        }
+    }
+
+    private fun fetchGeocode(geocoder: Geocoder, latLng: LatLng) {
+        Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #1")
+        lifecycleScope.launch(Dispatchers.IO) {
+//        lifecycleScope.launch(Dispatchers.Main) {
+//            withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #2")
+                geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1) { addresses ->
+                    Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #3")
+                    val poi = PointOfInterest(latLng, "", addresses[0].featureName)
+                    updateCurrentPoi(poi)
+                }
+                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #8")
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to fetch address list: ${e.message}")
+                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #9")
+            }
+            Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #10")
+//            }
+//            Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #11")
+        }
+//        Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #12")
+    }
+
+    private fun putMarkerOnMap(poi: PointOfInterest) {
+        Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #1")
+        lifecycleScope.launch(Dispatchers.Main) {
+//            withContext(Dispatchers.IO) {
+                try {
+                    poiLatLng = poi.latLng
+                    poiLocation = poi.name
+
+                    Log.d(TAG, "---------- SelectLocationFragment.putMarkerOnMap() -> poiLatLng: $poiLatLng")
+                    Log.d(TAG, "---------- SelectLocationFragment.putMarkerOnMap() -> poiLocation: ${poi.name}")
+                    Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #2")
+                    currentMarker = map?.addMarker(MarkerOptions().position(poi.latLng).title(poi.name))
+                    Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #3")
+                    if (currentMarker != null) {
+                        Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #4")
+                    } else {
+                        Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #5")
+                    }
+                    Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #6")
+                    currentMarker?.showInfoWindow()
+                    Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #7")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to put Marker on map: ${e.message}")
+                    Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #8")
+                }
+                Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #9")
+//            }
+        }
+        Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> #10")
+    }
+
+    private fun putCircleOnMap(poi: PointOfInterest) {
+        Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #1")
+        lifecycleScope.launch(Dispatchers.Main) {
+            try {
+                Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #2")
+                // Add circle range.
+                currentCircleMarker = map?.addCircle(CircleOptions()
+                    .center(poi.latLng)
+                    .radius(GEOFENCE_RADIUS_IN_METERS.toDouble())
+                    .fillColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.geofencing_circle_fill_color
+                        )
+                    )
+                    .strokeColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.geofencing_circle_stroke_color
+                        )
+                    )
+                )
+                Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #3")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to put Circle on map: ${e.message}")
+                Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #4")
+            }
+            Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #5")
+        }
+        Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> #6")
+    }
+
+    private fun removeMarkers() {
+        Log.d(TAG, "SelectLocationFragment.removeMarkers() -> #1")
+        lifecycleScope.launch(Dispatchers.Main) {
+            try {
+                Log.d(TAG, "SelectLocationFragment.removeMarkers() -> #2")
+                currentMarker?.remove()
+                currentCircleMarker?.remove()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to remove Marker and Circle Marker on map: ${e.message}")
+                Log.d(TAG, "SelectLocationFragment.removeMarkers() -> #3")
+            }
+        }
+        Log.d(TAG, "SelectLocationFragment.removeMarkers() -> #4")
+    }
+
+    private fun updateCurrentPoi(poi: PointOfInterest) {
+        binding.saveButton.visibility = View.VISIBLE
+        removeMarkers()
+        currentPOI = poi
+        putMarkerOnMap(poi)
+        putCircleOnMap(poi)
+    }
+
+    /*
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
+            /*
             val poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
                     .title(poi.name)
             )
+             */
 //            poiMarker?.showInfoWindow()
 
             latLng = poi.latLng
@@ -469,8 +611,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             binding.saveButton.visibility = View.VISIBLE
         }
     }
+     */
+
+    private fun setPoiClick(map: GoogleMap?) {
+        Log.d(TAG, "SelectLocationFragment.setPoiClick().")
+        map?.setOnPoiClickListener { poi ->
+            updateCurrentPoi(poi)
+        }
+    }
 
     private fun setMapStyle(map: GoogleMap) {
+        Log.d(TAG, "SelectLocationFragment.setMapStyle().")
         try {
             // Customize the styling of the base map using a JSON object defined in a raw res file.
             val success = map.setMapStyle(
