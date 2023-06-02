@@ -201,9 +201,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         checkLocationPermission()
 
         binding.saveButton.setOnClickListener {
-            Log.d(TAG, "+++++++++++++++ SelectLocationFragment.init() -> poiLatLng: $poiLatLng")
-            Log.d(TAG, "+++++++++++++++ SelectLocationFragment.init() -> poiLocation: $poiLocation")
-
             onLocationSelected(
                 location = poiLocation,
                 latitude = poiLatLng.latitude,

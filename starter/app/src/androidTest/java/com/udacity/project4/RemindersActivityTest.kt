@@ -146,6 +146,18 @@ class RemindersActivityTest : KoinTest {
 		activityActivityScenario.close()
 	}
 
+	/**
+	 * To avoid flakiness, we highly recommend that you turn off system animations on the virtual or
+	 * physical devices used for testing. On your device, under Settings > Developer options,
+	 * disable the following 3 settings:
+	 *
+	 * - Window animation scale
+	 * - Transition animation scale
+	 * - Animator duration scale
+	 *
+	 * https://developer.android.com/training/testing/espresso/setup#set-up-environment
+	 */
+	// FIXME
 	@Test
 	fun addReminder_verifyNewItemInTheList() {
 		val typingTitle = "Title espresso"
@@ -170,7 +182,7 @@ class RemindersActivityTest : KoinTest {
 		// Click any position in the map.
 		onView(withId(R.id.map_fragment)).perform(click())
 		runBlocking {
-			delay(1000)
+			delay(3000)
 		}
 		// Save location
 		onView(withId(R.id.save_button)).perform(click())
