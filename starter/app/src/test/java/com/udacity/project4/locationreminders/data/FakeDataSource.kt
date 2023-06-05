@@ -2,11 +2,12 @@ package com.udacity.project4.locationreminders.data
 
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import org.jetbrains.annotations.NotNull
 
 /**
  * Use FakeDataSource that acts as a test double to the LocalDataSource
  */
-class FakeDataSource(private var reminderList: MutableList<ReminderDTO>? = mutableListOf())
+class FakeDataSource(@NotNull private var reminderList: MutableList<ReminderDTO>? = mutableListOf())
     : ReminderDataSource {
 
     private var shouldReturnError = false
