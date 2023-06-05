@@ -156,6 +156,10 @@ class RemindersListViewModelTest {
 		// WHEN - We load the Reminders.
 		remindersListViewModel.loadReminders()
 		// THEN - We get showSnackBar MutableLiveData in the ViewModel returning us "not found".
-		assertThat(remindersListViewModel.showSnackBar.getOrAwaitValue(), `is`("No Reminders found"))
+		assertThat(remindersListViewModel.showSnackBar.getOrAwaitValue(),
+			`is`(
+				"There was an exception thrown while retrieving the data. " +
+				"This way, the reminders were unable to get retrieved.")
+			)
 	}
 }

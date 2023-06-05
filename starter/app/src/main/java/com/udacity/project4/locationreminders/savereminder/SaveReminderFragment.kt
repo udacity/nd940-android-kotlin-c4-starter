@@ -20,6 +20,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.Geofence.NEVER_EXPIRE
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
@@ -194,15 +195,9 @@ class SaveReminderFragment : BaseFragment() {
             .addGeofence(geofence)
             .build()
 
-        // First, remove any existing GeoFences that use our pending intent
-        geofencingClient.removeGeofences(geofencePendingIntent).run {
-            // Regardless of success/failure of the removal, add the new geofence
-            addOnCompleteListener {
-                // Add the new geofence request with the new geofence
-                if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    addGeoFenceRequest(geofencingRequest, geofence)
-                }
-            }
+        // Add the new geofence request with the new geofence
+        if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            addGeoFenceRequest(geofencingRequest, geofence)
         }
     }
 
@@ -236,9 +231,8 @@ class SaveReminderFragment : BaseFragment() {
                 currentGeofenceData.latLong.longitude,
                 GEOFENCE_RADIUS_IN_METERS
             )
-            // Set the expiration duration of the geofence. This geofence gets automatically removed
-            // after this period of time.
-            .setExpirationDuration(GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+            // Set the expiration duration of the geofence.
+            .setExpirationDuration(NEVER_EXPIRE)
             // Set the transition types of interest. Alerts are only generated for these
             // transitions. We track entry and exit transitions in this sample.
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
