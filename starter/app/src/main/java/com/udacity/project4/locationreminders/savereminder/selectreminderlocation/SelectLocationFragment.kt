@@ -42,6 +42,7 @@ import com.udacity.project4.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.IOException
 import java.util.*
@@ -284,67 +285,71 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     }
                 }
             } catch (e: IOException) {
+                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> Failed to fetch address list.")
                 Log.e(TAG, "Failed to fetch address list: ${e.message}")
             }
         }
     }
 
     private fun putMarkerOnMap(poi: PointOfInterest) {
-        lifecycleScope.launch(Dispatchers.Main) {
-            try {
-                poiLatLng = poi.latLng
-                poiLocation = poi.name
-                currentMarker = map?.addMarker(MarkerOptions().position(poi.latLng).title(poi.name))
-                currentMarker?.showInfoWindow()
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to put Marker on map: ${e.message}")
-            }
+        Log.d(TAG, "SelectLocationFragment.putMarkerOnMap().")
+        try {
+            poiLatLng = poi.latLng
+            poiLocation = poi.name
+            currentMarker = map?.addMarker(MarkerOptions().position(poi.latLng).title(poi.name))
+            currentMarker?.showInfoWindow()
+        } catch (e: Exception) {
+            Log.d(TAG, "SelectLocationFragment.putMarkerOnMap() -> Failed to put Marker on map.")
+            Log.e(TAG, "Failed to put Marker on map: ${e.message}")
         }
     }
 
     private fun putCircleOnMap(poi: PointOfInterest) {
-        lifecycleScope.launch(Dispatchers.Main) {
-            try {
-                // Add circle range.
-                currentCircleMarker = map?.addCircle(CircleOptions()
-                    .center(poi.latLng)
-                    .radius(GEOFENCE_RADIUS_IN_METERS.toDouble())
-                    .fillColor(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.geofencing_circle_fill_color
-                        )
-                    )
-                    .strokeColor(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.geofencing_circle_stroke_color
-                        )
+        Log.d(TAG, "SelectLocationFragment.putCircleOnMap().")
+        try {
+            // Add circle range.
+            currentCircleMarker = map?.addCircle(CircleOptions()
+                .center(poi.latLng)
+                .radius(GEOFENCE_RADIUS_IN_METERS.toDouble())
+                .fillColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.geofencing_circle_fill_color
                     )
                 )
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to put Circle on map: ${e.message}")
-            }
+                .strokeColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.geofencing_circle_stroke_color
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            Log.d(TAG, "SelectLocationFragment.putCircleOnMap() -> Failed to put Circle on map.")
+            Log.e(TAG, "Failed to put Circle on map: ${e.message}")
         }
     }
 
     private fun removeMarkers() {
-        lifecycleScope.launch(Dispatchers.Main) {
-            try {
-                currentMarker?.remove()
-                currentCircleMarker?.remove()
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to remove Marker and Circle Marker on map: ${e.message}")
-            }
+        Log.d(TAG, "SelectLocationFragment.removeMarkers().")
+        try {
+            currentMarker?.remove()
+            currentCircleMarker?.remove()
+        } catch (e: Exception) {
+            Log.d(TAG, "SelectLocationFragment.removeMarkers() -> Failed to remove Marker and Circle Marker on map.")
+            Log.e(TAG, "Failed to remove Marker and Circle Marker on map: ${e.message}")
         }
     }
 
     private fun updateCurrentPoi(poi: PointOfInterest) {
-        binding.saveButton.visibility = View.VISIBLE
-        removeMarkers()
-        currentPOI = poi
-        putMarkerOnMap(poi)
-        putCircleOnMap(poi)
+        Log.d(TAG, "SelectLocationFragment.updateCurrentPoi().")
+        lifecycleScope.launch(Dispatchers.Main) {
+            binding.saveButton.visibility = View.VISIBLE
+            removeMarkers()
+            currentPOI = poi
+            putMarkerOnMap(poi)
+            putCircleOnMap(poi)
+        }
     }
 
     private fun setPoiClick(map: GoogleMap?) {
