@@ -31,6 +31,7 @@ import com.udacity.project4.utils.toast
  * https://stackoverflow.com/questions/60384554/access-background-location-not-working-on-lower-than-q-29-android-versions
  * https://stackoverflow.com/questions/40142331/how-to-request-location-permission-at-runtime/40142454#40142454
  * https://github.com/zoontek/react-native-permissions/issues/620
+ * -> https://github.com/zoontek/react-native-permissions/issues/620#issuecomment-866690012
  */
 class TrackingActivity : AppCompatActivity() {
 

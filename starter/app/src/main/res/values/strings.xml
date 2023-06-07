@@ -34,7 +34,7 @@
     <string name="should_enable_gps">Your GPS seems to be disabled. Do you want to enable it?</string>
     <string name="gps_enabled">GPS enabled! Tracking now the user location…</string>
     <string name="please_accept_allow_all_time">Please click into \"Allow all the time\" to accept the GPS location permission!</string>
-    <string name="allow_all_time_did_not_accepted">Since you didn\'t accept the Tracking permission, we\'re closing the Maps screen.</string>
+    <string name="allow_all_time_did_not_accepted">Since you didn\'t accept the Location permission, this app won\'t be able to get your current location.</string>
     <string name="poi_selected">POI selected!</string>
 
     <string name="geofence_entered">Geofence Entered</string>

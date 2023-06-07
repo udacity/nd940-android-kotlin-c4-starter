@@ -4,12 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.*
@@ -46,7 +46,6 @@ import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setNavigationResult
-import com.udacity.project4.utils.showRequestPermissionRationale
 import com.udacity.project4.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -54,6 +53,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.io.IOException
 import java.util.*
+
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -120,6 +120,31 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     /**
      * Source:
+     * https://developer.android.com/training/location/permissions#user-choice-affects-permission-grants
+     */
+
+    val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        Log.d(TAG, "SelectLocationFragment.locationPermissionRequest() -> permissions: $permissions")
+        when {
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                // Precise location access granted.
+                Log.d(TAG, "SelectLocationFragment.locationPermissionRequest() -> Precise location access granted.")
+                enableMyLocation()
+            }
+            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                // Only approximate location access granted.
+                Log.d(TAG, "SelectLocationFragment.locationPermissionRequest() -> Only approximate location access granted.")
+            } else -> {
+                // No location access granted.
+                Log.d(TAG, "SelectLocationFragment.locationPermissionRequest() -> No location access granted.")
+            }
+        }
+    }
+
+    /**
+     * Source:
      * https://developer.android.com/training/permissions/requesting#allow-system-manage-request-code
      */
 
@@ -127,22 +152,26 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // permissions dialog. Save the return value, an instance of ActivityResultLauncher. You can use
     // either a val, as shown in this snippet, or a lateinit var in your onAttach() or onCreate()
     // method.
+    /*
     private val requestFinePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         Log.d(TAG, "SelectLocationFragment.requestFinePermissionLauncher() -> isGranted: $isGranted")
         if (isGranted) {
             // Permission is granted. Continue the action or workflow in your app.
-            checkBackgroundLocationPermission()
+//            checkBackgroundLocationPermission()
+            checkGpsEnabled()
         } else {
             // Explain to the user that the feature is unavailable because the feature requires a
             // permission that the user has denied. At the same time, respect the user's decision.
             // Don't link to system settings in an effort to convince the user to change their
             // decision.
-            permissionDeniedFeedback()
+//            permissionDeniedFeedback()
         }
     }
+     */
 
+    /*
     private val requestBackPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -156,6 +185,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             permissionDeniedFeedback()
         }
     }
+     */
 
     /**
      * Source:
@@ -166,7 +196,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         Log.d(TAG, "SelectLocationFragment.activityResultLauncher.")
         if (isGpsEnabled()) {
             parent.toast(R.string.gps_enabled)
-            requestTracking()
+//            requestTracking()
+            enableMyLocation()
         } else {
             permissionDeniedFeedback()
         }
@@ -198,7 +229,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         fusedLocationProvider = getFusedLocationProviderClient(parent)
         startMapFeature()
         initMenus()
-        checkLocationPermission()
+//        checkLocationPermission()
 
         binding.saveButton.setOnClickListener {
             onLocationSelected(
@@ -295,6 +326,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // Permission Methods
     //--------------------------------------------------
 
+    /*
     private fun checkLocationPermission() {
         Log.d(TAG, "SelectLocationFragment.checkLocationPermission().")
         when {
@@ -333,7 +365,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             }
         }
     }
+     */
 
+    /*
     private fun checkBackgroundLocationPermission() {
         Log.d(TAG, "SelectLocationFragment.checkBackgroundLocationPermission().")
         when {
@@ -351,6 +385,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             }
         }
     }
+     */
 
     /**
      * This is the only method that will call the "Location permission" settings screen
@@ -363,6 +398,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * Once the app have it, then, we need the Manifest.permission.ACCESS_BACKGROUND_LOCATION
      * (in order to track the user GPS's location).
      */
+    /*
     private fun requestBackgroundLocationPermission() {
         Log.d(TAG, "SelectLocationFragment.requestBackgroundLocationPermission().")
         val builder = AlertDialog.Builder(parent)
@@ -382,6 +418,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         alertPleaseAcceptAllowAllTime = builder.create()
         alertPleaseAcceptAllowAllTime?.show()
     }
+     */
 
     //--------------------------------------------------
     // Maps Methods
@@ -416,6 +453,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             setPoiClick(it)
             // Add style to the map.
             setMapStyle(it)
+            enableMyLocation()
         }
     }
 
@@ -427,22 +465,28 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun fetchGeocode(geocoder: Geocoder, latLng: LatLng) {
-        Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #1")
+        Log.d(TAG, "SelectLocationFragment.fetchGeocode().")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #2")
-                geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1) { addresses ->
-                    Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #3")
-                    val poi = PointOfInterest(latLng, "", addresses[0].featureName)
-                    updateCurrentPoi(poi)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> Version >= Android 13.")
+                    geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1) { addresses ->
+                        val poi = PointOfInterest(latLng, "", addresses[0].featureName)
+                        updateCurrentPoi(poi)
+                    }
+                } else {
+                    Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> Version < Android 13.")
+                    val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+                    addresses?.let {
+                        val poi = PointOfInterest(latLng, "", it[0].featureName)
+                        updateCurrentPoi(poi)
+                    }
                 }
-                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #8")
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to fetch address list: ${e.message}")
-                Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #9")
             }
-            Log.d(TAG, "SelectLocationFragment.fetchGeocode() -> #10")
         }
     }
 
@@ -533,6 +577,29 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     // Location Methods
     //--------------------------------------------------
 
+    @SuppressLint("MissingPermission")
+    private fun enableMyLocation() {
+        Log.d(TAG, "SelectLocationFragment.enableMyLocation().")
+        if (isPermissionGranted()) {
+            Log.d(TAG, "SelectLocationFragment.enableMyLocation() -> isPermissionGranted? true")
+            map?.isMyLocationEnabled = true
+            checkGpsEnabled()
+        } else {
+            Log.d(TAG, "SelectLocationFragment.enableMyLocation() -> isPermissionGranted? false")
+//            requestFinePermissionLauncher.launch(FINE)
+            locationPermissionRequest.launch(arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+        }
+    }
+    private fun isPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     /**
      * Source:
      * https://stackoverflow.com/a/25175756/1354788
@@ -542,9 +609,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         if (!isGpsEnabled()) {
             Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [1]")
             buildAlertMessageNoGps()
-        } else {
-            Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [2]")
-            requestTracking()
+//        } else {
+//            Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [2]")
+            //requestTracking()
+//            enableMyLocation()
         }
     }
 
@@ -584,9 +652,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun permissionDeniedFeedback() {
         Log.d(TAG, "SelectLocationFragment.permissionDeniedFeedback().")
         parent.toast(R.string.allow_all_time_did_not_accepted)
-        requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
+    /*
     @SuppressLint("MissingPermission")
     private fun requestTracking() {
         Log.d(TAG, "SelectLocationFragment.requestTracking().")
@@ -596,6 +664,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             Looper.getMainLooper()
         )
     }
+     */
 
     /**
      * When the user confirms on the selected location, send back the selected location details
