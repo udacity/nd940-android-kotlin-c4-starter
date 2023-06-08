@@ -25,11 +25,11 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 		(context.applicationContext as MyApp).broadcastIntent = intent
 		val workManager = WorkManager.getInstance(context)
 		val intentToBundle = Gson().toJson(intent)
-		val exampleWorkRequest = GeofenceTransitionsWorkManager.buildWorkRequest(intentToBundle)
+		val workRequest = GeofenceTransitionsWorkManager.buildWorkRequest(intentToBundle)
 		workManager.enqueueUniqueWork(
 			UNIQUE_WORK_NAME,
 			ExistingWorkPolicy.KEEP,
-			exampleWorkRequest
+			workRequest
 		)
 	}
 }

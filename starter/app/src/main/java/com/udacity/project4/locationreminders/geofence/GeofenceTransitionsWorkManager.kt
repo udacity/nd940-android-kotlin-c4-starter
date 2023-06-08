@@ -66,18 +66,21 @@ class GeofenceTransitionsWorkManager(
         Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent().")
         if (event.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
             Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent() -> [1]")
-            val reminderDataItem = getFirstReminder(event.triggeringGeofences as List<Geofence>)
-            callNotification(context, reminderDataItem)
+            event.triggeringGeofences?.let { list ->
+                for (item in list) {
+                    val current = getCurrentReminder(item)
+                    callNotification(context, current)
+                }
+            }
         } else {
             Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent() -> [2]")
         }
     }
 
-    private fun getFirstReminder(triggeringGeoFences: List<Geofence>): ReminderDataItem {
-        val first = triggeringGeoFences[0]
-        val id = first.requestId
-        val lat = first.latitude
-        val lng = first.longitude
+    private fun getCurrentReminder(currentGeoFence: Geofence): ReminderDataItem {
+        val id = currentGeoFence.requestId
+        val lat = currentGeoFence.latitude
+        val lng = currentGeoFence.longitude
         return ReminderDataItem(
             title = id,
             description = "",
