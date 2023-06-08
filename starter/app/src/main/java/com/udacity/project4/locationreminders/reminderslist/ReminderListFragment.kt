@@ -51,13 +51,11 @@ class ReminderListFragment : BaseFragment() {
         Log.d(TAG, "ReminderListFragment.requestPermissionLauncher -> isGranted: $isGranted")
         (parent.applicationContext as MyApp).hasNotificationPermission = isGranted
         if (isGranted) {
-            Log.d(TAG, "ReminderListFragment.requestPermissionLauncher -> [1]")
+            Log.d(TAG, "ReminderListFragment.requestPermissionLauncher -> Notification permission is granted.")
             parent.toast(R.string.notification_permission_granted)
         } else {
-            Log.d(TAG, "ReminderListFragment.requestPermissionLauncher -> [2]")
+            Log.d(TAG, "ReminderListFragment.requestPermissionLauncher -> Notification permission is NOT granted.")
             parent.toast(R.string.no_notification_permission)
-//            AuthUI.getInstance().signOut(requireContext())
-            parent.onBackPressedDispatcher.onBackPressed()
         }
     }
 

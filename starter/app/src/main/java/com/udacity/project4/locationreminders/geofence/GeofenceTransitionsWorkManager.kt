@@ -1,6 +1,8 @@
 package com.udacity.project4.locationreminders.geofence
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.work.OneTimeWorkRequest
@@ -14,6 +16,7 @@ import com.udacity.project4.R
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.errorMessage
+import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.sendNotification
 
 /**
@@ -62,14 +65,22 @@ class GeofenceTransitionsWorkManager(
         return Result.success()
     }
 
+    /**
+     * Source:
+     * https://developer.android.com/training/location/geofencing#HandleGeofenceTransitions
+     */
     private fun handleEvent(event: GeofencingEvent) {
         Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent().")
-        if (event.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent() -> [1]")
+        val geofenceTransition = event.geofenceTransition
+//        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
+            geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+            Log.d(TAG, "GeofenceTransitionsWorkManager.handleEvent() -> " +
+                "event.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER")
             event.triggeringGeofences?.let { list ->
                 for (item in list) {
-                    val current = getCurrentReminder(item)
-                    callNotification(context, current)
+                    val geofenceTransitionDetails = getGeofenceTransitionDetails(item)
+                    checkNotification(context, geofenceTransitionDetails)
                 }
             }
         } else {
@@ -77,7 +88,7 @@ class GeofenceTransitionsWorkManager(
         }
     }
 
-    private fun getCurrentReminder(currentGeoFence: Geofence): ReminderDataItem {
+    private fun getGeofenceTransitionDetails(currentGeoFence: Geofence): ReminderDataItem {
         val id = currentGeoFence.requestId
         val lat = currentGeoFence.latitude
         val lng = currentGeoFence.longitude
@@ -90,9 +101,15 @@ class GeofenceTransitionsWorkManager(
         )
     }
 
-    private fun callNotification(context: Context, reminderDataItem: ReminderDataItem) {
-        val hasPermission = (context.applicationContext as MyApp).hasNotificationPermission
-        if (hasPermission) {
+    private fun checkNotification(context: Context, reminderDataItem: ReminderDataItem) {
+        val notificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.permissionGranted(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            true
+        }
+        Log.d(TAG, "GeofenceTransitionsWorkManager.callNotification() -> " +
+            "notificationPermission: $notificationPermission")
+        if (notificationPermission) {
             sendNotification(context, reminderDataItem)
         } else {
             val message = context.getString(R.string.no_notification_permission)

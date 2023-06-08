@@ -51,7 +51,7 @@
     <string name="geofences_added">Clue Geofence added.</string>
     <string name="geofences_not_added">Problem in adding geofences.</string>
 
-    <string name="no_notification_permission">Since the Notification permission was denied, the app will logout you from the system.</string>
+    <string name="no_notification_permission">Notification permission denied!</string>
     <string name="notification_permission_granted">Notification permission granted!</string>
 
     <!-- Reminder Details -->
