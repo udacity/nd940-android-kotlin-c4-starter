@@ -4,6 +4,8 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.maps.model.LatLng
+import com.udacity.project4.R
 import com.udacity.project4.base.BaseRecyclerViewAdapter
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
@@ -118,6 +121,17 @@ fun getFakeReminderItem() : ReminderDataItem {
         latitude = -34.0, // Sydney, Australia
         longitude = 151.0 // Sydney, Australia
     )
+}
+
+fun FragmentActivity.isGpsEnabled(): Boolean {
+    Log.d(TAG, "Extensions.isGpsEnabled().")
+    val manager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    return manager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+}
+
+fun FragmentActivity.permissionDeniedFeedback() {
+    Log.d(TAG, "Extensions.permissionDeniedFeedback().")
+    this.toast(R.string.allow_all_time_did_not_accepted)
 }
 
 data class LandmarkDataObject(val id: String, val latLong: LatLng)

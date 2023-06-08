@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
@@ -14,6 +15,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
@@ -32,18 +35,23 @@ import com.udacity.project4.databinding.FragmentSaveReminderBinding
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationFragment.Companion.ARGUMENTS
-import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_EXPIRATION_IN_MILLISECONDS
 import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.LandmarkDataObject
 import com.udacity.project4.utils.TAG
+import com.udacity.project4.utils.errorMessage
 import com.udacity.project4.utils.getNavigationResult
+import com.udacity.project4.utils.isGpsEnabled
+import com.udacity.project4.utils.permissionDeniedFeedback
 import com.udacity.project4.utils.permissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.toast
 import org.koin.android.ext.android.inject
-import java.util.concurrent.TimeUnit
 
 class SaveReminderFragment : BaseFragment() {
+
+    //--------------------------------------------------
+    // Attributes
+    //--------------------------------------------------
 
     companion object {
         internal const val ACTION_GEOFENCE_EVENT = "SaveReminderFragment.ACTION_GEOFENCE_EVENT"
@@ -54,10 +62,18 @@ class SaveReminderFragment : BaseFragment() {
 
     // Get the view model this time as a single to be shared with the another fragment
     override val _viewModel: SaveReminderViewModel by inject()
+
     private lateinit var binding: FragmentSaveReminderBinding
-    private lateinit var geofencingClient: GeofencingClient
     private lateinit var parent: FragmentActivity
+    private var alertShouldEnableGps: AlertDialog? = null
+
+    private lateinit var geofencingClient: GeofencingClient
     private lateinit var geofenceData: LandmarkDataObject
+
+    private var currentGeoFenceLocation = ""
+    private var currentGeoFenceLatitude = 0.0
+    private var currentGeoFenceLongitude = 0.0
+    private lateinit var dataItem: ReminderDataItem
 
     // A PendingIntent for the Broadcast Receiver that handles geofence transitions.
     private val geofencePendingIntent: PendingIntent by lazy {
@@ -74,6 +90,69 @@ class SaveReminderFragment : BaseFragment() {
             intentFlagTypeUpdateCurrent = PendingIntent.FLAG_MUTABLE
         }
         PendingIntent.getBroadcast(requireContext(), 0, intent, intentFlagTypeUpdateCurrent)
+    }
+
+    //--------------------------------------------------
+    // Activity Result Callbacks
+    //--------------------------------------------------
+
+    //
+    private val finePermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isEnabled ->
+        Log.d(TAG, "SaveReminderFragment.finePermissionRequest -> isEnabled: $isEnabled")
+        if (isEnabled) {
+            checkGpsEnabled()
+        }
+    }
+     //
+
+    /*
+    private val finePermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        Log.d(TAG, "SaveReminderFragment.locationPermissionRequest -> permissions: $permissions")
+        val finePermission = permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)
+        val coarsePermission = permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+        if (finePermission && coarsePermission) {
+            Log.d(TAG, "SaveReminderFragment.finePermissionRequest -> Permissions granted.")
+            checkGpsEnabled()
+        } else {
+            // No location access granted.
+            Log.d(TAG, "SaveReminderFragment.finePermissionRequest -> No location access granted.")
+        }
+    }
+    */
+
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        Log.d(TAG, "SaveReminderFragment.locationPermissionRequest -> permissions: $permissions")
+        val finePermission = permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)
+        val backgroundPermission = hasBackgroundPermission()
+        if (finePermission && backgroundPermission) {
+            Log.d(TAG, "SaveReminderFragment.locationPermissionRequest -> Permissions granted.")
+            checkGpsEnabled()
+        } else {
+            // No location access granted.
+            Log.d(TAG, "SaveReminderFragment.locationPermissionRequest -> No location access granted.")
+        }
+    }
+
+    /**
+     * Source:
+     * https://www.tothenew.com/blog/android-katha-onactivityresult-is-deprecated-now-what/
+     */
+    private var activityResultLauncher = registerForActivityResult(ActivityResultContracts
+        .StartActivityForResult()) {
+        Log.d(TAG, "SaveReminderFragment.activityResultLauncher.")
+        if (parent.isGpsEnabled()) {
+            Log.d(TAG, "SaveReminderFragment.activityResultLauncher -> GPS enabled.")
+            addGeoFence()
+        } else {
+            Log.d(TAG, "SaveReminderFragment.activityResultLauncher -> GPS NOT enabled.")
+            parent.permissionDeniedFeedback()
+        }
     }
 
     //--------------------------------------------------
@@ -126,45 +205,68 @@ class SaveReminderFragment : BaseFragment() {
         }
 
         // Use the user entered reminder details to:
-        //  1) Add a geofencing request.
-        //  2) Save the reminder to the local db.
+        //  1) Check GeoFence permissions.
+        //  2) Add a geofencing request.
+        //  3) Save the reminder to the local db.
         binding.saveReminder.setOnClickListener {
             Log.d(TAG, "SaveReminderFragment.onViewCreated() -> binding.saveReminder.setOnClickListener.")
             val location = _viewModel.reminderSelectedLocationStr.value
             val lat = _viewModel.latitude.value
             val lng = _viewModel.longitude.value
-            saveReminderOnDatabase(location, lat, lng)
+            if (location != null) {
+                currentGeoFenceLocation = location
+            }
+            if (lat != null) {
+                currentGeoFenceLatitude = lat
+            }
+            if (lng != null) {
+                currentGeoFenceLongitude = lng
+            }
+            saveReminderOnDatabase()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d(TAG, "SaveReminderFragment.onDestroy().")
         // Make sure to clear the view model after destroy, as it's a single view model.
         _viewModel.onClear()
+        disableDialogs()
+    }
+
+    private fun disableDialogs() {
+        Log.d(TAG, "SaveReminderFragment.disableDialogs().")
+        alertShouldEnableGps?.let {
+            if (it.isShowing) {
+                it.cancel()
+            }
+        }
     }
 
     //--------------------------------------------------
     // Database Methods
     //--------------------------------------------------
 
-    private fun saveReminderOnDatabase(location: String?, lat: Double?, lng: Double?) {
+    private fun saveReminderOnDatabase() {
         Log.d(TAG, "SaveReminderFragment.saveReminderOnDatabase().")
         val title = _viewModel.reminderTitle.value
         val description = _viewModel.reminderDescription.value
-        val dataItem = ReminderDataItem(
+        dataItem = ReminderDataItem(
             title = title,
             description = description,
-            location = location,
-            latitude = lat,
-            longitude = lng
+            location = currentGeoFenceLocation,
+            latitude = currentGeoFenceLatitude,
+            longitude = currentGeoFenceLongitude
         )
-        val validationOk = _viewModel.validateAndSaveReminder(dataItem)
-        if (validationOk) {
-            if (location != null && lat != null && lng != null) {
-                addGeoFence(location, lat, lng)
-            } else {
-                Log.e(TAG, "Couldn't create a Geofence.")
-            }
+        val paramsValid = _viewModel.validateEnteredData(dataItem)
+//        val paramsValid = titleValid &&
+//            currentGeoFenceLocation.isNotEmpty() &&
+//            currentGeoFenceLatitude != 0.0 &&
+//            currentGeoFenceLongitude != 0.0
+        if (paramsValid) {
+            checkGeoFencePermissions()
+        } else {
+            Log.d(TAG, "SaveReminderFragment.saveReminderOnDatabase() -> Couldn't create a Geofence.")
         }
     }
 
@@ -173,19 +275,93 @@ class SaveReminderFragment : BaseFragment() {
     //--------------------------------------------------
 
     /**
-     * Adds a GeoFence for the current clue if needed, and removes any existing GeoFence. This
-     * method should be called after the user has granted the location permission. If there are
-     * no more GeoFences, we remove the GeoFence and let the viewModel know that the ending hint
-     * is now "active."
+     * When we want to add a Geofence, the flow should be as follows:
+     *
+     * 1.First check if both the required permissions (foreground and background) have been granted.
+     * If there is any ungranted permission, request it properly.
+     *
+     * 2.If all the required permissions have been granted, then we should proceed to check if the
+     * device location is on. If the device location is not on, show the location settings dialog
+     * and ask the user to enable it.
+     *
+     * 3. We should automatically attempt to add a Geofence ONLY IF we are certain that the required
+     * permissions have been granted and the device location is on.
      */
-    private fun addGeoFence(location: String, lat: Double, lng: Double) {
+    private fun checkGeoFencePermissions() {
+        Log.d(TAG, "SaveReminderFragment.checkGeoFencePermissions().")
+        val backgroundPermission = hasBackgroundPermission()
+        val finePermission = parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+        // Source: https://developer.android.com/training/location/geofencing#RequestGeofences
+        val geofencePermissions = backgroundPermission && finePermission
+        if (geofencePermissions) {
+            Log.d(TAG, "SaveReminderFragment.checkGeoFencePermissions() -> GeoFence permissions enabled.")
+            checkGpsEnabled()
+        } else {
+            Log.d(TAG, "SaveReminderFragment.checkGeoFencePermissions() -> GeoFence permissions NOT enabled.")
+            parent.toast(R.string.location_permission_needed)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Log.d(TAG, "SaveReminderFragment.checkGeoFencePermissions() -> " +
+                    "Asking for 'Manifest.permission.ACCESS_BACKGROUND_LOCATION' and " +
+                    "'Manifest.permission.ACCESS_FINE_LOCATION' permissions.")
+                locationPermissionRequest.launch(arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                )
+            } else {
+                Log.d(TAG, "SaveReminderFragment.checkGeoFencePermissions() -> " +
+                        "Asking for 'Manifest.permission.ACCESS_FINE_LOCATION' permission.")
+                finePermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
+    private fun hasBackgroundPermission(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            parent.permissionGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        } else {
+            true
+        }
+
+    private fun checkGpsEnabled() {
+        Log.d(TAG, "SaveReminderFragment.checkGpsEnabled().")
+        if (!parent.isGpsEnabled()) {
+            Log.d(TAG, "SaveReminderFragment.checkGpsEnabled() -> GPS is NOT enabled.")
+            buildAlertMessageNoGps()
+        } else {
+            Log.d(TAG, "SaveReminderFragment.checkGpsEnabled() -> GPS is enabled.")
+            addGeoFence()
+        }
+    }
+
+    /**
+     * Source:
+     * https://stackoverflow.com/a/25175756/1354788
+     */
+    private fun buildAlertMessageNoGps() {
+        Log.d(TAG, "SaveReminderFragment.buildAlertMessageNoGps().")
+        val builder = AlertDialog.Builder(parent)
+        builder.setMessage(R.string.should_enable_gps)
+            .setCancelable(false)
+            .setPositiveButton("Yes") { _, _ ->
+                activityResultLauncher.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.cancel()
+                parent.permissionDeniedFeedback()
+            }
+        alertShouldEnableGps = builder.create()
+        alertShouldEnableGps?.show()
+    }
+
+    private fun addGeoFence() {
         Log.d(TAG, "SaveReminderFragment.addGeoFence().")
-        // Build the Geofence Object
-        val currentGeofenceData = LandmarkDataObject(location, LatLng(lat, lng))
+        // Build the Geofence Object.
+        val currentGeofenceData = LandmarkDataObject(currentGeoFenceLocation,
+            LatLng(currentGeoFenceLatitude, currentGeoFenceLongitude))
         geofenceData = currentGeofenceData
         val geofence = buildGeoFence(currentGeofenceData)
 
-        // Build the geofence request
+        // Build the geofence request.
         val geofencingRequest = GeofencingRequest.Builder()
             // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
             // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
@@ -195,29 +371,7 @@ class SaveReminderFragment : BaseFragment() {
             .addGeofence(geofence)
             .build()
 
-        // Add the new geofence request with the new geofence
-        if (parent.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            addGeoFenceRequest(geofencingRequest, geofence)
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun addGeoFenceRequest(geofencingRequest: GeofencingRequest, geofence: Geofence) {
-        Log.d(TAG, "SaveReminderFragment.addGeoFenceRequest().")
-        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
-            addOnSuccessListener {
-                // GeoFences added.
-                parent.toast(R.string.geofences_added)
-                Log.d(TAG, "Adding GeoFence: ${geofence.requestId}")
-            }
-            addOnFailureListener {
-                // Failed to add GeoFences.
-                parent.toast(R.string.geofences_not_added)
-                if ((it.message != null)) {
-                    Log.d(TAG, it.message!!)
-                }
-            }
-        }
+        addGeoFenceRequest(geofencingRequest, geofence)
     }
 
     private fun buildGeoFence(currentGeofenceData: LandmarkDataObject) : Geofence {
@@ -239,11 +393,34 @@ class SaveReminderFragment : BaseFragment() {
             .build()
     }
 
+    @SuppressLint("MissingPermission")
+    private fun addGeoFenceRequest(geofencingRequest: GeofencingRequest, geofence: Geofence) {
+        Log.d(TAG, "SaveReminderFragment.addGeoFenceRequest().")
+        geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
+            addOnSuccessListener {
+                // GeoFences added.
+                parent.toast(R.string.geofences_added)
+                Log.d(TAG, "SaveReminderFragment.addGeoFenceRequest() -> SUCCESS!! Adding GeoFence: ${geofence.requestId}")
+                _viewModel.validateAndSaveReminder(dataItem)
+            }
+            addOnFailureListener {
+                // Failed to add GeoFences.
+                parent.toast(R.string.geofences_not_added)
+                val message = it.message
+                if (message != null) {
+                    val errorMessage = errorMessage(parent, message.toInt())
+                    Log.d(TAG, "SaveReminderFragment.addGeoFenceRequest() -> ERROR!! Error message: $errorMessage")
+                }
+            }
+        }
+    }
+
     //--------------------------------------------------
     // Menu Methods
     //--------------------------------------------------
 
     private fun addMenu(menuHost: MenuHost) {
+        Log.d(TAG, "SaveReminderFragment.addMenu().")
         // Add menu items without using the Fragment Menu APIs. Note how we can tie the MenuProvider
         // to the viewLifecycleOwner and an optional Lifecycle.State (here, RESUMED) to indicate
         // when the menu should be visible.

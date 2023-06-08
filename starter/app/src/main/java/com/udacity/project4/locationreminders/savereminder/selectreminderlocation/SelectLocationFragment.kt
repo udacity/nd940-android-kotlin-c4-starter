@@ -2,12 +2,10 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Geocoder
-import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -36,17 +34,17 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.GeofencingConstants.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.TAG
+import com.udacity.project4.utils.isGpsEnabled
+import com.udacity.project4.utils.permissionDeniedFeedback
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setNavigationResult
 import com.udacity.project4.utils.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.IOException
 import java.util.*
-
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -109,10 +107,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private var activityResultLauncher = registerForActivityResult(ActivityResultContracts
         .StartActivityForResult()) {
         Log.d(TAG, "SelectLocationFragment.activityResultLauncher.")
-        if (isGpsEnabled()) {
+        if (parent.isGpsEnabled()) {
             enableMyLocation()
         } else {
-            permissionDeniedFeedback()
+            parent.permissionDeniedFeedback()
         }
     }
 
@@ -405,16 +403,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun checkGpsEnabled() {
         Log.d(TAG, "SelectLocationFragment.checkGpsEnabled().")
-        if (!isGpsEnabled()) {
+        if (!parent.isGpsEnabled()) {
             Log.d(TAG, "SelectLocationFragment.checkGpsEnabled() -> [1]")
             buildAlertMessageNoGps()
         }
-    }
-
-    private fun isGpsEnabled(): Boolean {
-        Log.d(TAG, "SelectLocationFragment.isGpsEnabled().")
-        val manager = parent.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
     /**
@@ -431,15 +423,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             }
             .setNegativeButton("No") { dialog, _ ->
                 dialog.cancel()
-                permissionDeniedFeedback()
+                parent.permissionDeniedFeedback()
             }
         alertShouldEnableGps = builder.create()
         alertShouldEnableGps?.show()
-    }
-
-    private fun permissionDeniedFeedback() {
-        Log.d(TAG, "SelectLocationFragment.permissionDeniedFeedback().")
-        parent.toast(R.string.allow_all_time_did_not_accepted)
     }
 
     /**
@@ -453,7 +440,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         parent.toast(R.string.poi_selected)
         lifecycleScope.launch {
-            delay(2000)
+            delay(1000)
             val triple = Triple(location, latitude, longitude)
             setNavigationResult(triple, ARGUMENTS)
             findNavController().popBackStack()
