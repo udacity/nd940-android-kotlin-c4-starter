@@ -222,7 +222,11 @@ class SaveReminderFragment : BaseFragment() {
             if (lng != null) {
                 currentGeoFenceLongitude = lng
             }
-            saveReminderOnDatabase()
+            if (_viewModel.testing.value == true) {
+                _viewModel.validateAndSaveReminder(dataItem)
+            } else {
+                saveReminderOnDatabase()
+            }
         }
     }
 

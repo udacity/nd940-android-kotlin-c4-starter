@@ -440,7 +440,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         parent.toast(R.string.poi_selected)
         lifecycleScope.launch {
-            delay(1000)
+//            delay(1000)
             val triple = Triple(location, latitude, longitude)
             setNavigationResult(triple, ARGUMENTS)
             findNavController().popBackStack()

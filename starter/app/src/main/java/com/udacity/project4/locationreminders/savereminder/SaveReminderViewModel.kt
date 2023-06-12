@@ -23,6 +23,7 @@ class SaveReminderViewModel(
     val selectedPOI = MutableLiveData<PointOfInterest?>()
     val latitude = MutableLiveData<Double?>()
     val longitude = MutableLiveData<Double?>()
+    val testing = MutableLiveData<Boolean>()
 
     init {
         reminderDescription.value = ""
@@ -99,5 +100,9 @@ class SaveReminderViewModel(
         }
 
         return true
+    }
+
+    fun setTestingMode(value: Boolean) {
+        testing.value = value
     }
 }
