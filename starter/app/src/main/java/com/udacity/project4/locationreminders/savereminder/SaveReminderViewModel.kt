@@ -19,14 +19,12 @@ class SaveReminderViewModel(
 ): BaseViewModel(app) {
     val reminderTitle = MutableLiveData<String?>()
     val reminderDescription = MutableLiveData<String?>()
-    val reminderSelectedLocationStr = MutableLiveData<String?>()
     val selectedPOI = MutableLiveData<PointOfInterest?>()
-    val latitude = MutableLiveData<Double?>()
-    val longitude = MutableLiveData<Double?>()
-    val testing = MutableLiveData<Boolean>()
+
+    val reminderSelectedLocationStr = MutableLiveData<String?>()
 
     init {
-        reminderDescription.value = ""
+        reminderDescription.postValue("")
     }
 
     /**
@@ -37,8 +35,6 @@ class SaveReminderViewModel(
         reminderDescription.value = null
         reminderSelectedLocationStr.value = null
         selectedPOI.value = null
-        latitude.value = null
-        longitude.value = null
     }
 
     /**
@@ -102,7 +98,9 @@ class SaveReminderViewModel(
         return true
     }
 
-    fun setTestingMode(value: Boolean) {
-        testing.value = value
+    fun onSaveLocation(poi: PointOfInterest?) {
+        Log.d(TAG, "SaveReminderViewModel.onSaveLocation().")
+        selectedPOI.value = poi
+        navigationCommand.value = NavigationCommand.Back
     }
 }

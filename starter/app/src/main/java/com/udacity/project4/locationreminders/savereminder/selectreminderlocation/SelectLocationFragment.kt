@@ -21,12 +21,12 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.udacity.project4.MyApp
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -37,10 +37,7 @@ import com.udacity.project4.utils.TAG
 import com.udacity.project4.utils.isGpsEnabled
 import com.udacity.project4.utils.permissionDeniedFeedback
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-import com.udacity.project4.utils.setNavigationResult
-import com.udacity.project4.utils.toast
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.io.IOException
@@ -58,13 +55,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     // Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
+    // Use Koin to get the view model of the SelectLocation
+
     private var map: GoogleMap? = null
 
     private var currentMarker: Marker? = null
     private var currentCircleMarker: Circle? = null
     private var currentPOI: PointOfInterest? = null
-    private lateinit var poiLatLng : LatLng
-    private var poiLocation = ""
+    private var poiLatLng = LatLng(-34.0, 151.0)
+    private var poiLocation = "Sydney"
 
     private var alertShouldEnableGps: AlertDialog? = null
 
@@ -141,11 +140,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         initMenus()
 
         binding.saveButton.setOnClickListener {
-            onLocationSelected(
-                location = poiLocation,
-                latitude = poiLatLng.latitude,
-                longitude = poiLatLng.longitude
-            )
+            onLocationSelected()
         }
     }
 
@@ -238,7 +233,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        Log.d(TAG, "SelectLocationFragment.onMapReady().")
+        val app = requireActivity().application as MyApp
+        Log.d(TAG, "----- SelectLocationFragment.onMapReady() -> testingMode = ${app.testingMode}")
         map = googleMap
 
         // Add a marker in Sydney and move the camera
@@ -247,25 +243,40 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             it.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
             it.moveCamera(CameraUpdateFactory.newLatLng(sydney))
             setMapClick(it)
-            // Put a marker to location that the user selected.
-            setPoiClick(it)
-            // Add style to the map.
-            setMapStyle(it)
-            enableMyLocation()
+
+            if (!app.testingMode) {
+//            if (_viewModel.testing.value == false) {
+                // Put a marker to location that the user selected.
+                setPoiClick(it)
+                // Add style to the map.
+                setMapStyle(it)
+                enableMyLocation()
+            }
         }
     }
 
     private fun setMapClick(map: GoogleMap?) {
-        Log.d(TAG, "SelectLocationFragment.setMapClick().")
+        val app = requireActivity().application as MyApp
+        Log.d(TAG, "----- SelectLocationFragment.setMapClick() -> testingMode = ${app.testingMode}")
         map?.setOnMapClickListener { latLng ->
-            val geocoder = Geocoder(requireContext(), Locale.getDefault())
-            fetchGeocode(geocoder, latLng)
+//            lifecycleScope.launch(Dispatchers.IO) {
+                if (app.testingMode) {
+                    Log.d(TAG, "SelectLocationFragment.setMapClick() -> _viewModel.testing.value == true")
+                    currentPOI = PointOfInterest(poiLatLng, "", poiLocation)
+                    onLocationSelected()
+                } else {
+                    Log.d(TAG, "SelectLocationFragment.setMapClick() -> _viewModel.testing.value == false")
+                    val geocoder = Geocoder(requireContext(), Locale.getDefault())
+                    fetchGeocode(geocoder, latLng)
+                }
+//            }
         }
     }
 
     @Suppress("DEPRECATION")
     private fun fetchGeocode(geocoder: Geocoder, latLng: LatLng) {
-        Log.d(TAG, "SelectLocationFragment.fetchGeocode().")
+        val app = requireActivity().application as MyApp
+        Log.d(TAG, "----- SelectLocationFragment.fetchGeocode() -> testingMode = ${app.testingMode}")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -434,17 +445,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * to the view model and navigate back to the previous fragment to save the reminder and add
      * the geofence.
      */
-    private fun onLocationSelected(location: String, latitude: Double, longitude: Double) {
-        Log.d(TAG, "SelectLocationFragment.onLocationSelected() -> " +
-            "location: $location, latitude: $latitude, longitude: $longitude")
+    private fun onLocationSelected() {
+        Log.d(TAG, "SelectLocationFragment.onLocationSelected().")
+        currentPOI?.let {
+            Log.d(TAG, "SelectLocationFragment.onLocationSelected() -> " +
+                "location: ${it.name}, latitude: $${it.latLng.latitude}, longitude: ${it.latLng.longitude}")
+            }
+        _viewModel.onSaveLocation(currentPOI)
 
-        parent.toast(R.string.poi_selected)
-        lifecycleScope.launch {
+//        parent.toast(R.string.poi_selected)
+//        lifecycleScope.launch {
 //            delay(1000)
+        /*
             val triple = Triple(location, latitude, longitude)
             setNavigationResult(triple, ARGUMENTS)
             findNavController().popBackStack()
-        }
+         */
+//        }
 
         /*
         // Use the navigationCommand live data to navigate between the fragments

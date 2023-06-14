@@ -28,6 +28,7 @@ import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.udacity.project4.MyApp
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -178,13 +179,6 @@ class SaveReminderFragment : BaseFragment() {
         parent = requireActivity()
         parent.onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressHandler)
 
-        getNavigationResult(ARGUMENTS)?.observe(viewLifecycleOwner) { result ->
-            val triple = result as Triple<String, Double, Double>
-            _viewModel.reminderSelectedLocationStr.value = triple.component1()
-            _viewModel.latitude.value = triple.component2()
-            _viewModel.longitude.value = triple.component3()
-        }
-
         val menuHost: MenuHost = parent
         addMenu(menuHost)
 
@@ -210,9 +204,11 @@ class SaveReminderFragment : BaseFragment() {
         //  3) Save the reminder to the local db.
         binding.saveReminder.setOnClickListener {
             Log.d(TAG, "SaveReminderFragment.onViewCreated() -> binding.saveReminder.setOnClickListener.")
-            val location = _viewModel.reminderSelectedLocationStr.value
-            val lat = _viewModel.latitude.value
-            val lng = _viewModel.longitude.value
+            val selectedPoi = _viewModel.selectedPOI.value
+            val location = selectedPoi?.name
+            val lat = selectedPoi?.latLng?.latitude
+            val lng = selectedPoi?.latLng?.longitude
+
             if (location != null) {
                 currentGeoFenceLocation = location
             }
@@ -222,11 +218,7 @@ class SaveReminderFragment : BaseFragment() {
             if (lng != null) {
                 currentGeoFenceLongitude = lng
             }
-            if (_viewModel.testing.value == true) {
-                _viewModel.validateAndSaveReminder(dataItem)
-            } else {
-                saveReminderOnDatabase()
-            }
+            saveReminderOnDatabase()
         }
     }
 
@@ -252,6 +244,7 @@ class SaveReminderFragment : BaseFragment() {
     //--------------------------------------------------
 
     private fun saveReminderOnDatabase() {
+        val app = requireActivity().application as MyApp
         Log.d(TAG, "SaveReminderFragment.saveReminderOnDatabase().")
         val title = _viewModel.reminderTitle.value
         val description = _viewModel.reminderDescription.value
@@ -262,15 +255,20 @@ class SaveReminderFragment : BaseFragment() {
             latitude = currentGeoFenceLatitude,
             longitude = currentGeoFenceLongitude
         )
-        val paramsValid = _viewModel.validateEnteredData(dataItem)
-//        val paramsValid = titleValid &&
+
+        if (app.testingMode) {
+            _viewModel.validateAndSaveReminder(dataItem)
+        } else {
+            val paramsValid = _viewModel.validateEnteredData(dataItem)
+//            val paramsValid = titleValid &&
 //            currentGeoFenceLocation.isNotEmpty() &&
 //            currentGeoFenceLatitude != 0.0 &&
 //            currentGeoFenceLongitude != 0.0
-        if (paramsValid) {
-            checkGeoFencePermissions()
-        } else {
-            Log.d(TAG, "SaveReminderFragment.saveReminderOnDatabase() -> Couldn't create a Geofence.")
+            if (paramsValid) {
+                checkGeoFencePermissions()
+            } else {
+                Log.d(TAG, "SaveReminderFragment.saveReminderOnDatabase() -> Couldn't create a Geofence.")
+            }
         }
     }
 
