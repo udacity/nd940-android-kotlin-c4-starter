@@ -29,9 +29,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    testOptions.unitTests {
-        includeAndroidResources = true
-        returnDefaultValues = true
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+        animationsDisabled = true
     }
 
 //    dataBinding {

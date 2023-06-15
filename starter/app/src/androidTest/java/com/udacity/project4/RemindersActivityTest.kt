@@ -9,6 +9,10 @@ import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.action.GeneralClickAction
+import androidx.test.espresso.action.Press
+import androidx.test.espresso.action.Tap
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -19,7 +23,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.rule.GrantPermissionRule
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.local.LocalDB
@@ -29,15 +32,8 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.hamcrest.CoreMatchers
 import org.junit.After
 import org.junit.Before
@@ -50,7 +46,6 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.get
-import org.mockito.Mockito
 
 /**
  * END TO END test to black box test the app.
@@ -61,7 +56,6 @@ import org.mockito.Mockito
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-// Extended Koin Test - embed autoclose @After method to close Koin after every test
 class RemindersActivityTest : KoinTest {
 
 	// Executes each task synchronously using Architecture Components.
@@ -71,27 +65,10 @@ class RemindersActivityTest : KoinTest {
 	@get:Rule
 	var activityScenarioRule = ActivityScenarioRule(RemindersActivity::class.java)
 
-	/**
-	 * https://stackoverflow.com/a/45320863
-	 */
-//	@get:Rule
-//	var finePermissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_FINE_LOCATION)
-//	@get:Rule
-//	var coarsePermissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_COARSE_LOCATION)
-//	@get:Rule
-//	var backgroundPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-
-	// Set the main coroutines dispatcher for unit testing.
-//	@ExperimentalCoroutinesApi
-//	@get:Rule
-//	var mainCoroutineRule = MainCoroutineRule()
-
-	private lateinit var decorView: View
-
 	// An Idling Resource that waits for Data Binding to have no pending bindings.
 	private val dataBindingIdlingResource = DataBindingIdlingResource()
 
-//	private lateinit var viewModel: SaveReminderViewModel
+	private lateinit var decorView: View
 	private lateinit var repository: ReminderDataSource
 	private lateinit var appContext: Application
 
@@ -173,40 +150,21 @@ class RemindersActivityTest : KoinTest {
 	}
 
 	/**
-	 * To avoid flakiness, we highly recommend that you turn off system animations on the virtual or
-	 * physical devices used for testing. On your device, under Settings > Developer options,
-	 * disable the following 3 settings:
-	 *
-	 * - Window animation scale
-	 * - Transition animation scale
-	 * - Animator duration scale
-	 *
-	 * https://developer.android.com/training/testing/espresso/setup#set-up-environment
-	 */
-	/**
 	 * Toast Assertions doesn't working in versions below 30.
-	 *
 	 * https://github.com/android/android-test/issues/803
 	 */
 	@Test
-	fun addingReminder_verifyIfToastIsCalled() = runTest {
-		// Verifying Exception - Toast Assertions doesn't work in versions above 30.
+	fun addingReminder_verifyIfToastIsCalled() {
+		// Verifying Exception because Toast Assertions doesn't work in versions above 30.
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			throw Exception("Toast Assertions doesn't work in versions above 30.")
 		}
 
-		// Setup.
-		val typingTitle = "Title espresso"
-		val typingDescription = "Description espresso"
+		// Setup for this test.
+		val typingTitle = "Title"
+		val typingDescription = "Description"
 		val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
 		dataBindingIdlingResource.monitorActivity(activityScenario)
-
-		// Set Main dispatcher to not run coroutines eagerly, for just this one test.
-//		val dispatcher = StandardTestDispatcher()
-//		Dispatchers.setMain(dispatcher)
-
-		val mock = Mockito.mock(ReminderDataSource::class.java)
-		val viewModel = SaveReminderViewModel(appContext, mock)
 
 		// GIVEN - Clicking to add a new task on Save Reminder screen.
 		onView(withId(R.id.addReminderFAB)).perform(click())
@@ -214,30 +172,32 @@ class RemindersActivityTest : KoinTest {
 		onView(withId(R.id.reminderDescription)).perform(ViewActions.typeText(typingDescription))
 		closeSoftKeyboard()
 
+		// WHEN - Clicking in any position in the map, and saving the location.
 		(appContext as MyApp).testingMode = true
 		onView(withId(R.id.selectLocation)).perform(click())
-
-		// WHEN - Clicking in any position in the map, and saving the location
-//		GlobalScope.launch(Dispatchers.Default) {
-			onView(withId(R.id.map_fragment)).perform(click())
-//		}
-
-			// Execute pending coroutines actions.
-//		dispatcher.scheduler.advanceUntilIdle() // https://kt.academy/article/cc-testing
-//		advanceUntilIdle()
+		onView(withId(R.id.map_fragment)).perform(simulateClickOnMap(500, 500))
+		// Wait for map to load.
+		Thread.sleep(2000)
 
 		// THEN - Save Reminder and check if Toast is displayed.
-		val selectedLocation = viewModel.selectedPOI.value?.name
 		onView(withId(R.id.saveReminder)).perform(click())
-//		onView(withText(typingTitle)).check(matches(isDisplayed()))
-//		onView(withText(typingDescription)).check(matches(isDisplayed()))
-//		onView(withText(selectedLocation)).check(matches(isDisplayed()))
-
 		onView(withText(R.string.reminder_saved)).inRoot(
 			withDecorView(CoreMatchers.not(decorView))
 		).check(matches(isDisplayed()))
 
-		// Make sure the activity is closed before resetting the db:
 		activityScenario.close()
+	}
+
+	private fun simulateClickOnMap(x: Int, y: Int): ViewAction {
+		return GeneralClickAction(
+			Tap.SINGLE, { view ->
+				val screenPos = IntArray(2)
+				view.getLocationOnScreen(screenPos)
+				val screenX = (screenPos[0] + x).toFloat()
+				val screenY = (screenPos[1] + y).toFloat()
+				floatArrayOf(screenX, screenY)
+			},
+			Press.FINGER, 0, 0
+		)
 	}
 }
