@@ -4,8 +4,10 @@ A Todo list app with location reminders that remind the user to do something whe
 
 ## Getting Started
 
-1. Clone the project to your local machine.
-2. Open the project using Android Studio.
+1. Android Studio (Jellyfish or above)
+2. JDK 21 with `JAVA_HOME` environment variable set. If you don't have JDK 21 installed or `JAVA_HOME` is not set, consider using a tool like `sdkman` to simplify the process. Refer to the sdkman documentation for installation instructions: [sdkman installation](https://sdkman.io/install)
+3. Clone the project to your local machine. 
+4. Open the project using Android Studio.
 
 ### Dependencies
 
