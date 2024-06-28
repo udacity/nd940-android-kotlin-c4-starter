@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace 'com.udacity.project4'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.udacity.project4"
@@ -34,12 +34,9 @@ android {
         returnDefaultValues = true
     }
 
-//    dataBinding {
-//        enabled = true
-//        enabledForTests = true
-//    }
     buildFeatures {
         dataBinding true
+        buildConfig true
     }
 }
 
@@ -68,6 +65,7 @@ dependencies {
 
     // Koin
     implementation "io.insert-koin:koin-android:$koinVersion"
+    androidTestImplementation("io.insert-koin:koin-test:3.1.6")
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$junitVersion"
